@@ -84,12 +84,19 @@ export function DestinationResultCard({
             label="Est. monthly budget"
             value={`$${low.toLocaleString()} – $${high.toLocaleString()}`}
           />
+          {result.projectedSpend !== null && (
+            <Stat
+              label="Your projected spend"
+              value={`$${result.projectedSpend.toLocaleString()} / month`}
+            />
+          )}
           <Stat label="Visa complexity" value={visaComplexityLabel(d.visa.complexity)} />
           <Stat
             label="Healthcare"
             value={`${healthcareLabel(d.healthcare.rating)} (${d.healthcare.rating}/5)`}
           />
         </dl>
+
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
