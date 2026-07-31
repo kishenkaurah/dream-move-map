@@ -53,6 +53,18 @@ export function ComparisonTable({ results }: { results: DestinationResult[] }) {
               </td>
             ))}
           </tr>
+          {results.some((r) => r.projectedSpend !== null) && (
+            <tr className="border-b border-border">
+              <th scope="row" className="p-3 text-left font-medium">
+                Your projected spend
+              </th>
+              {results.map((r) => (
+                <td key={r.destination.id} className="p-3 tabular-nums">
+                  {r.projectedSpend !== null ? `$${r.projectedSpend.toLocaleString()}` : "—"}
+                </td>
+              ))}
+            </tr>
+          )}
           <tr className="border-b border-border">
             <th scope="row" className="p-3 text-left font-medium">
               Visa complexity
