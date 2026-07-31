@@ -21,7 +21,12 @@ priorities to overseas retirement destinations.
 Each destination is scored 0–100 on eight factors:
 
 1. **Affordability** — expected monthly income (plus a 2%/yr draw on savings)
-   compared to the destination's indicative solo/couple budget midpoint.
+   compared to a personalised cost estimate. That estimate blends the
+   destination's indicative solo/couple budget midpoint (40%) with a projection
+   of the user's *current* home spending (60%), scaled by the destination's
+   `costIndex` versus their home region's cost level and by whether they want to
+   trim, keep or upgrade their lifestyle. If they skip the spending question,
+   only the indicative budget is used.
 2. **Visa compatibility** — route complexity, income guidance vs. the user's
    income, minimum-age rules, and the user's paperwork tolerance.
 3. **Healthcare** — destination rating, amplified when the user flags high or
