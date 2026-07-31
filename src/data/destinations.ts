@@ -108,6 +108,36 @@ const VISA = {
     incomeGuide: 2400,
     note: "The non-lucrative route requires substantial proven passive income, private health cover, and generally forbids working.",
   },
+  mexico: {
+    complexity: 2,
+    label: "Simpler — consulate income test",
+    incomeGuide: 2600,
+    note: "Temporary and permanent residency are granted at consulates abroad based on income or savings thresholds that change with the local minimum wage.",
+  },
+  panama: {
+    complexity: 1,
+    label: "Simplest — pensionado programme",
+    incomeGuide: 1000,
+    note: "The pensionado programme accepts a lifetime pension of around $1,000 a month and grants permanent status with a well-known discount package.",
+  },
+  greece: {
+    complexity: 3,
+    label: "Moderate — EU passive income route",
+    incomeGuide: 2200,
+    note: "The financially independent person route requires proven passive income, health cover and in-country renewals; a flat-tax pension regime may apply.",
+  },
+  vietnam: {
+    complexity: 5,
+    label: "Hardest — no retirement visa",
+    incomeGuide: 1500,
+    note: "Vietnam has no retirement visa; most retirees rely on repeated temporary visas or a sponsored route, which adds real long-term uncertainty.",
+  },
+  colombia: {
+    complexity: 2,
+    label: "Simpler — pension-based M visa",
+    incomeGuide: 900,
+    note: "The pensioner (M) visa is built on a verified pension of roughly three times the minimum wage, renewable and leading toward residency.",
+  },
 } satisfies Record<string, Destination["visa"]>;
 
 const TRAVEL = {
@@ -116,7 +146,13 @@ const TRAVEL = {
   malaysia: { us_canada: 21, uk: 13, eu: 13, australia_nz: 8, other: 14 },
   costa_rica: { us_canada: 5, uk: 12, eu: 12, australia_nz: 22, other: 12 },
   spain: { us_canada: 8.5, uk: 2.5, eu: 2.5, australia_nz: 24, other: 10 },
+  mexico: { us_canada: 4, uk: 11, eu: 12, australia_nz: 22, other: 12 },
+  panama: { us_canada: 5.5, uk: 12, eu: 12, australia_nz: 23, other: 13 },
+  greece: { us_canada: 11, uk: 3.5, eu: 2.5, australia_nz: 22, other: 8 },
+  vietnam: { us_canada: 20, uk: 13, eu: 12.5, australia_nz: 9, other: 14 },
+  colombia: { us_canada: 5.5, uk: 11, eu: 11, australia_nz: 24, other: 13 },
 } satisfies Record<string, Record<HomeRegion, number>>;
+
 
 export const DESTINATIONS: Destination[] = [
   /* ---------------------------------------------------------------- Thailand */
