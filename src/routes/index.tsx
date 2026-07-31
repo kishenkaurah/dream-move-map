@@ -29,7 +29,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Answer 18 questions and see which overseas retirement destinations genuinely fit your budget, healthcare needs and lifestyle.",
+          "Answer 12 questions and see which overseas retirement destinations genuinely fit your budget, healthcare needs and lifestyle.",
       },
     ],
   }),
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/")({
 const STEPS = [
   {
     icon: Compass,
-    title: "Answer 18 short questions",
+    title: "Answer 12 short questions",
     body: "Finances, healthcare, climate, language, family proximity and how much paperwork you can stomach.",
   },
   {
@@ -121,10 +121,14 @@ function Landing() {
               <div className="absolute -bottom-6 left-4 right-4 rounded-xl border border-border bg-card/95 p-4 shadow-[var(--shadow-card)] backdrop-blur sm:left-8 sm:right-8">
                 <p className="text-sm text-muted-foreground">
                   Currently scoring{" "}
-                  <span className="font-medium text-foreground">{DESTINATIONS.length} destinations</span>{" "}
-                  across 8 weighted factors — {DESTINATIONS.map((d) => d.name).join(", ")}.
+                  <span className="font-medium text-foreground">
+                    {DESTINATIONS.length} cities
+                  </span>{" "}
+                  across {new Set(DESTINATIONS.map((d) => d.country)).size} countries and 8 weighted
+                  factors — {DESTINATIONS.map((d) => d.name).join(", ")}.
                 </p>
               </div>
+
             </div>
           </div>
         </section>

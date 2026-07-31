@@ -49,6 +49,9 @@ export function DestinationResultCard({
               <span aria-hidden="true">{d.emoji}</span>
               <span className="truncate">{d.name}</span>
             </h3>
+            <p className="mt-0.5 text-xs tracking-wide text-muted-foreground uppercase">
+              {d.country}
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">{d.tagline}</p>
           </div>
           <div className="shrink-0 text-right">

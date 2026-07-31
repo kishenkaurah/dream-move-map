@@ -10,7 +10,7 @@ import { DestinationResultCard } from "@/components/destination-result-card";
 import { ComparisonTable } from "@/components/comparison-table";
 import { LeadCapture } from "@/components/lead-capture";
 import { clearAssessment, loadAssessment } from "@/lib/assessment-storage";
-import { rankDestinations } from "@/lib/scoring";
+import { rankDestinations, topMatches } from "@/lib/scoring";
 import { QUESTIONS } from "@/data/questions";
 
 export const Route = createFileRoute("/results")({
@@ -55,7 +55,8 @@ function ResultsPage() {
     () => (complete ? rankDestinations(answers.answers) : []),
     [answers, complete],
   );
-  const top3 = results.slice(0, 3);
+  const top3 = useMemo(() => topMatches(results, 3), [results]);
+  const rest = results.filter((r) => !top3.includes(r));
 
   function restart() {
     clearAssessment();
@@ -82,7 +83,7 @@ function ResultsPage() {
             <CardContent className="pt-6">
               <h1 className="display text-2xl">No completed assessment yet</h1>
               <p className="mt-3 text-muted-foreground">
-                Finish the 16-question assessment and your matches will appear here. Your progress
+                Finish the 12-question assessment and your matches will appear here. Your progress
                 is saved on this device, so you can pick up where you left off.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -117,7 +118,7 @@ function ResultsPage() {
           <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
             <p className="eyebrow">Your assessment</p>
             <h1 className="display mt-3 text-3xl text-balance sm:text-4xl">
-              Your top {top3.length} retirement destination matches
+              Your top {top3.length} retirement city matches
             </h1>
             <p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground">
               Ranked against the profile you described, using eight weighted factors. Open the
@@ -155,13 +156,14 @@ function ResultsPage() {
             <div className="rounded-xl border border-border bg-card p-5">
               <h2 className="display text-lg">Also scored</h2>
               <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-                {results.slice(3).map((r) => (
+                {rest.map((r) => (
                   <li
                     key={r.destination.id}
                     className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm"
                   >
                     <span className="min-w-0 truncate">
-                      <span aria-hidden="true">{r.destination.emoji}</span> {r.destination.name}
+                      <span aria-hidden="true">{r.destination.emoji}</span> {r.destination.name},{" "}
+                      {r.destination.country}
                     </span>
                     <span className="shrink-0 tabular-nums text-muted-foreground">
                       {r.overall}%

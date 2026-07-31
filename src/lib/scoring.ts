@@ -217,9 +217,10 @@ function scoreVisa(d: Destination, answers: Answers) {
     ageIssue = true;
   }
 
-  const tolerance = str(answers, "bureaucracy");
+  const tolerance = str(answers, "bureaucracy") || "medium";
   if (tolerance === "low" && d.visa.complexity >= 4) score -= 8;
   if (tolerance === "high") score += 5;
+
 
   const notes: string[] = [];
   notes.push(d.visa.label + ".");
@@ -247,8 +248,10 @@ function scoreHealthcare(d: Destination, answers: Answers) {
 
 function scoreLifestyle(d: Destination, answers: Answers) {
   const setting = str(answers, "setting");
-  const pace = str(answers, "pace");
-  const housing = str(answers, "housing");
+  // Pace and housing are no longer asked — assume a balanced pace and an
+  // open mind on renting vs. buying.
+  const pace = str(answers, "pace") || "balanced";
+  const housing = str(answers, "housing") || "unsure";
   const priorities = list(answers, "priorities");
 
   const settingScore = d.settingFit[setting] ?? 60;
@@ -258,13 +261,14 @@ function scoreLifestyle(d: Destination, answers: Answers) {
     ? priorities.reduce((sum, p) => sum + (d.priorityStrength[p] ?? 60), 0) / priorities.length
     : 70;
 
-  const score = settingScore * 0.3 + paceScore * 0.25 + housingScore * 0.15 + priorityScore * 0.3;
+  const score = settingScore * 0.35 + paceScore * 0.15 + housingScore * 0.1 + priorityScore * 0.4;
   return {
     score: clamp(score),
-    note: `Matches your preference for ${setting.replace("_", " ")} living at a ${pace} pace, and lines up with the priorities you selected.`,
+    note: `Matches your preference for ${setting.replace("_", " ")} living and lines up with the priorities you selected.`,
     constrained: false,
   };
 }
+
 
 function scoreClimate(d: Destination, answers: Answers) {
   const climate = str(answers, "climate");
@@ -309,9 +313,12 @@ function scoreProximity(d: Destination, answers: Answers) {
 }
 
 function scoreBureaucracy(d: Destination, answers: Answers) {
-  const tolerance = str(answers, "bureaucracy");
-  const taxSensitivity = str(answers, "tax");
+  // Paperwork tolerance and tax sensitivity are no longer asked — assume a
+  // middling tolerance for admin and no strong tax preference.
+  const tolerance = str(answers, "bureaucracy") || "medium";
+  const taxSensitivity = str(answers, "tax") || "medium";
   const admin = 100 - (d.bureaucracy - 1) * 18;
+
   const tolerated = tolerance === "high" ? 25 : tolerance === "medium" ? 12 : 0;
   let score = clamp(admin + tolerated);
   if (taxSensitivity === "high") score = clamp(score * 0.6 + (d.taxFriendliness / 5) * 100 * 0.4);
@@ -413,3 +420,25 @@ import { FACTOR_LABELS as FACTOR_LABELS_LOCAL } from "@/data/destinations";
 export function rankDestinations(answers: Answers): DestinationResult[] {
   return DESTINATIONS.map((d) => scoreDestination(d, answers)).sort((a, b) => b.overall - a.overall);
 }
+
+/**
+ * Picks the headline matches from a ranked list, showing at most one city per
+ * country first so the top three aren't three towns in the same place. If that
+ * leaves fewer than `count`, the next-best cities fill the remaining slots.
+ */
+export function topMatches(results: DestinationResult[], count = 3): DestinationResult[] {
+  const seen = new Set<string>();
+  const picked: DestinationResult[] = [];
+  for (const r of results) {
+    if (picked.length === count) break;
+    if (seen.has(r.destination.country)) continue;
+    seen.add(r.destination.country);
+    picked.push(r);
+  }
+  for (const r of results) {
+    if (picked.length === count) break;
+    if (!picked.includes(r)) picked.push(r);
+  }
+  return picked;
+}
+
