@@ -11,6 +11,7 @@ import { ComparisonTable } from "@/components/comparison-table";
 import { LeadCapture } from "@/components/lead-capture";
 import { clearAssessment, loadAssessment } from "@/lib/assessment-storage";
 import { rankDestinations, topMatches } from "@/lib/scoring";
+import { toReportMatch } from "@/lib/lead-report";
 import { QUESTIONS } from "@/data/questions";
 
 export const Route = createFileRoute("/results")({
@@ -151,7 +152,14 @@ function ResultsPage() {
           </Tabs>
 
           <div className="mt-10 space-y-6">
-            <LeadCapture topDestinationId={top3[0]?.destination.id} />
+            <LeadCapture
+              matches={top3.map(toReportMatch)}
+              answers={
+                Object.fromEntries(
+                  Object.entries(answers.answers).filter(([, v]) => v !== undefined),
+                ) as Record<string, string | string[]>
+              }
+            />
             <Disclaimer />
             <div className="rounded-xl border border-border bg-card p-5">
               <h2 className="display text-lg">Also scored</h2>

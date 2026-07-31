@@ -1,51 +1,38 @@
 /**
- * Mock lead persistence layer.
- * Structured as an async repository so it can be swapped for a Lovable Cloud
- * (Supabase) table insert later without changing any component code.
+ * Lead persistence. Submits to the server endpoint, which stores the lead in
+ * the database and emails the full report.
  */
-export interface Lead {
+import type { ReportMatch } from "./lead-report";
+
+export interface SubmitLeadInput {
+  name: string;
+  email: string;
+  matches: ReportMatch[];
+  answers?: Record<string, string | string[]>;
+}
+
+export interface SubmitLeadResult {
   id: string;
-  name: string;
-  email: string;
-  topDestinationId?: string | undefined;
-  createdAt: string;
+  reportStatus: "sent" | "suppressed" | "not_configured" | "failed";
 }
 
-const KEY = "ran.leads.v1";
+export async function submitLead(input: SubmitLeadInput): Promise<SubmitLeadResult> {
+  const res = await fetch("/api/public/leads", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
 
-export async function submitLead(input: {
-  name: string;
-  email: string;
-  topDestinationId?: string | undefined;
-}): Promise<Lead> {
-  const lead: Lead = {
-    id: crypto.randomUUID(),
-    name: input.name,
-    email: input.email,
-    topDestinationId: input.topDestinationId,
-    createdAt: new Date().toISOString(),
-  };
-  // Simulated network latency so the UI states are exercised realistically.
-  await new Promise((r) => setTimeout(r, 600));
-  if (typeof window !== "undefined") {
-    try {
-      const raw = window.localStorage.getItem(KEY);
-      const all: Lead[] = raw ? JSON.parse(raw) : [];
-      all.push(lead);
-      window.localStorage.setItem(KEY, JSON.stringify(all));
-    } catch {
-      /* ignore */
-    }
-  }
-  return lead;
-}
-
-export function listLeads(): Lead[] {
-  if (typeof window === "undefined") return [];
+  let body: { id?: string; reportStatus?: SubmitLeadResult["reportStatus"]; error?: string } = {};
   try {
-    const raw = window.localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : [];
+    body = (await res.json()) as typeof body;
   } catch {
-    return [];
+    /* non-JSON response */
   }
+
+  if (!res.ok || !body.id) {
+    throw new Error(body.error ?? "We couldn't save your details. Please try again.");
+  }
+
+  return { id: body.id, reportStatus: body.reportStatus ?? "not_configured" };
 }

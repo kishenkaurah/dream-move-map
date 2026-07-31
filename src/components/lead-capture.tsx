@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { submitLead } from "@/lib/leads";
+import type { ReportMatch } from "@/lib/lead-report";
 import { track } from "@/lib/analytics";
 
 const leadSchema = z.object({
@@ -30,11 +31,20 @@ const leadSchema = z.object({
     .max(255, { message: "Email must be under 255 characters" }),
 });
 
-export function LeadCapture({ topDestinationId }: { topDestinationId?: string | undefined }) {
+export function LeadCapture({
+  matches,
+  answers,
+}: {
+  matches: ReportMatch[];
+  answers?: Record<string, string | string[]>;
+}) {
+  const topDestinationId = matches[0]?.id;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<{ name?: string | undefined; email?: string | undefined }>({});
   const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
+  const [emailed, setEmailed] = useState(false);
+  const [sentTo, setSentTo] = useState("");
   const [bookingOpen, setBookingOpen] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
@@ -47,12 +57,30 @@ export function LeadCapture({ topDestinationId }: { topDestinationId?: string | 
     }
     setErrors({});
     setStatus("saving");
-    await submitLead({ ...parsed.data, topDestinationId });
     track("lead_submitted", { topDestinationId });
-    setStatus("done");
-    toast.success("Report request received", {
-      description: "We'll send your detailed comparison shortly.",
-    });
+    try {
+      const result = await submitLead({
+        ...parsed.data,
+        matches,
+        ...(answers ? { answers } : {}),
+      });
+      setEmailed(result.reportStatus === "sent");
+      setSentTo(parsed.data.email);
+      setStatus("done");
+      if (result.reportStatus === "sent") {
+        track("report_emailed", { topDestinationId });
+        toast.success("Report sent", { description: `Check ${parsed.data.email}.` });
+      } else {
+        toast.success("Details saved", {
+          description: "We'll email your full report as soon as sending is live.",
+        });
+      }
+    } catch (err) {
+      setStatus("idle");
+      toast.error("Something went wrong", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    }
   }
 
   return (
@@ -70,9 +98,13 @@ export function LeadCapture({ topDestinationId }: { topDestinationId?: string | 
             <div className="flex items-start gap-3 rounded-lg border border-success/30 bg-background p-4">
               <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-success" aria-hidden="true" />
               <div>
-                <p className="font-medium">Thanks — you're on the list.</p>
+                <p className="font-medium">
+                  {emailed ? "Your report is on its way." : "Thanks — your details are saved."}
+                </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  We've saved your request. Nothing else is required from you right now.
+                  {emailed
+                    ? `We've emailed your full report to ${sentTo}. Check spam if it hasn't arrived in a few minutes.`
+                    : "We've saved your request and your matches. Your full report will be emailed as soon as sending is live."}
                 </p>
               </div>
             </div>
