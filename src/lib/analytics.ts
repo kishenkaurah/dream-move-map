@@ -7,6 +7,8 @@ export type AnalyticsEvent =
   | "step_completed"
   | "assessment_completed"
   | "lead_submitted"
+  | "lead_saved"
+  | "report_emailed"
   | "consultation_clicked";
 
 export interface TrackedEvent {
