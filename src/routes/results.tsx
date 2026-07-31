@@ -11,6 +11,7 @@ import { ComparisonTable } from "@/components/comparison-table";
 import { LeadCapture } from "@/components/lead-capture";
 import { clearAssessment, loadAssessment } from "@/lib/assessment-storage";
 import { rankDestinations, topMatches } from "@/lib/scoring";
+import { toReportMatch } from "@/lib/lead-report";
 import { QUESTIONS } from "@/data/questions";
 
 export const Route = createFileRoute("/results")({
