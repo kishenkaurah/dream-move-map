@@ -30,11 +30,20 @@ const leadSchema = z.object({
     .max(255, { message: "Email must be under 255 characters" }),
 });
 
-export function LeadCapture({ topDestinationId }: { topDestinationId?: string | undefined }) {
+export function LeadCapture({
+  matches,
+  answers,
+}: {
+  matches: ReportMatch[];
+  answers?: Record<string, string | string[]>;
+}) {
+  const topDestinationId = matches[0]?.id;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<{ name?: string | undefined; email?: string | undefined }>({});
   const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
+  const [emailed, setEmailed] = useState(false);
+  const [sentTo, setSentTo] = useState("");
   const [bookingOpen, setBookingOpen] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
@@ -47,12 +56,30 @@ export function LeadCapture({ topDestinationId }: { topDestinationId?: string | 
     }
     setErrors({});
     setStatus("saving");
-    await submitLead({ ...parsed.data, topDestinationId });
     track("lead_submitted", { topDestinationId });
-    setStatus("done");
-    toast.success("Report request received", {
-      description: "We'll send your detailed comparison shortly.",
-    });
+    try {
+      const result = await submitLead({
+        ...parsed.data,
+        matches,
+        ...(answers ? { answers } : {}),
+      });
+      setEmailed(result.reportStatus === "sent");
+      setSentTo(parsed.data.email);
+      setStatus("done");
+      if (result.reportStatus === "sent") {
+        track("report_emailed", { topDestinationId });
+        toast.success("Report sent", { description: `Check ${parsed.data.email}.` });
+      } else {
+        toast.success("Details saved", {
+          description: "We'll email your full report as soon as sending is live.",
+        });
+      }
+    } catch (err) {
+      setStatus("idle");
+      toast.error("Something went wrong", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    }
   }
 
   return (
