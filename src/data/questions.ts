@@ -90,8 +90,35 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: "climate",
+    id: "current_spend",
     step: 6,
+    title: "What do you spend each month at home today?",
+    help: "Housing, food, utilities, transport and everyday costs combined, in US dollars. We use this to project your spending abroad.",
+    type: "single",
+    options: [
+      { id: "under_2000", label: "Under $2,000" },
+      { id: "2000_3000", label: "$2,000 – $3,000" },
+      { id: "3000_4500", label: "$3,000 – $4,500" },
+      { id: "4500_6500", label: "$4,500 – $6,500" },
+      { id: "over_6500", label: "More than $6,500" },
+      { id: "unsure", label: "I'm not sure" },
+    ],
+  },
+  {
+    id: "spend_style",
+    step: 7,
+    title: "How would you like your spending to change abroad?",
+    help: "Applied to the projection of your current costs at local prices.",
+    type: "single",
+    options: [
+      { id: "trim", label: "Live more simply and spend less" },
+      { id: "same", label: "Keep a similar lifestyle" },
+      { id: "upgrade", label: "Upgrade — more comfort, help and travel" },
+    ],
+  },
+  {
+    id: "climate",
+    step: 8,
     title: "What climate suits you best?",
     type: "single",
     options: [
@@ -103,7 +130,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "setting",
-    step: 7,
+    step: 9,
     title: "Where would you like to wake up most mornings?",
     type: "single",
     options: [
@@ -115,7 +142,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "healthcare_importance",
-    step: 8,
+    step: 10,
     title: "How important is healthcare quality and access?",
     type: "single",
     options: [
@@ -127,7 +154,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "english",
-    step: 9,
+    step: 11,
     title: "How much do you need English in daily life?",
     type: "single",
     options: [
@@ -138,7 +165,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "family_proximity",
-    step: 10,
+    step: 12,
     title: "How important is staying within easy reach of family?",
     type: "single",
     options: [
@@ -149,7 +176,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "housing",
-    step: 11,
+    step: 13,
     title: "Do you expect to rent or buy?",
     type: "single",
     options: [
@@ -160,7 +187,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "pace",
-    step: 12,
+    step: 14,
     title: "What pace of life are you after?",
     type: "single",
     options: [
@@ -171,7 +198,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "bureaucracy",
-    step: 13,
+    step: 15,
     title: "How much paperwork and cultural adjustment can you tolerate?",
     help: "Residency renewals, translations, appointments and local admin.",
     type: "single",
@@ -183,7 +210,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "tax",
-    step: 14,
+    step: 16,
     title: "How sensitive are you to taxation of your retirement income?",
     type: "single",
     options: [
@@ -194,7 +221,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "timeframe",
-    step: 15,
+    step: 17,
     title: "When do you intend to relocate?",
     type: "single",
     options: [
@@ -206,7 +233,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "priorities",
-    step: 16,
+    step: 18,
     title: "What matters most in your next chapter?",
     help: "Choose up to three.",
     type: "multi",
