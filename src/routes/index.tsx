@@ -125,7 +125,8 @@ function Landing() {
                     {DESTINATIONS.length} cities
                   </span>{" "}
                   across {new Set(DESTINATIONS.map((d) => d.country)).size} countries and 8 weighted
-                  factors — {DESTINATIONS.map((d) => d.name).join(", ")}.
+                  factors — {Array.from(new Set(DESTINATIONS.map((d) => d.country))).join(", ")}.
+
                 </p>
               </div>
 
