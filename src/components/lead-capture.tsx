@@ -98,9 +98,13 @@ export function LeadCapture({
             <div className="flex items-start gap-3 rounded-lg border border-success/30 bg-background p-4">
               <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-success" aria-hidden="true" />
               <div>
-                <p className="font-medium">Thanks — you're on the list.</p>
+                <p className="font-medium">
+                  {emailed ? "Your report is on its way." : "Thanks — your details are saved."}
+                </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  We've saved your request. Nothing else is required from you right now.
+                  {emailed
+                    ? `We've emailed your full report to ${sentTo}. Check spam if it hasn't arrived in a few minutes.`
+                    : "We've saved your request and your matches. Your full report will be emailed as soon as sending is live."}
                 </p>
               </div>
             </div>
