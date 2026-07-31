@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { submitLead } from "@/lib/leads";
+import type { ReportMatch } from "@/lib/lead-report";
 import { track } from "@/lib/analytics";
 
 const leadSchema = z.object({
