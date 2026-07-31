@@ -30,6 +30,8 @@ export interface Destination {
   };
   /** Below this monthly income, affordability is treated as a hard constraint */
   affordabilityFloor: { solo: number; couple: number };
+  /** Local cost level relative to a US baseline of 100 */
+  costIndex: number;
   visa: {
     /** 1 = simplest, 5 = most complex */
     complexity: number;
