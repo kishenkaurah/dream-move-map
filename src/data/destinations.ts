@@ -30,6 +30,8 @@ export interface Destination {
   };
   /** Below this monthly income, affordability is treated as a hard constraint */
   affordabilityFloor: { solo: number; couple: number };
+  /** Local cost level relative to a US baseline of 100 */
+  costIndex: number;
   visa: {
     /** 1 = simplest, 5 = most complex */
     complexity: number;
@@ -76,6 +78,8 @@ export const DESTINATIONS: Destination[] = [
     tagline: "Low costs, warm winters and world-class private hospitals",
     budget: { solo: [1100, 2200], couple: [1600, 3000] },
     affordabilityFloor: { solo: 900, couple: 1300 },
+    /** Local cost level vs. a US baseline of 100 (used to project your current spending forward) */
+    costIndex: 40,
     visa: {
       complexity: 3,
       label: "Moderate — annual renewals",
@@ -132,6 +136,8 @@ export const DESTINATIONS: Destination[] = [
     tagline: "Mild Atlantic climate, EU healthcare and a gentle pace",
     budget: { solo: [1700, 2900], couple: [2300, 3900] },
     affordabilityFloor: { solo: 1500, couple: 2000 },
+    /** Local cost level vs. a US baseline of 100 (used to project your current spending forward) */
+    costIndex: 62,
     visa: {
       complexity: 3,
       label: "Moderate — passive income route",
@@ -187,6 +193,8 @@ export const DESTINATIONS: Destination[] = [
     tagline: "English-friendly, affordable and remarkably easy to settle into",
     budget: { solo: [1200, 2300], couple: [1700, 3100] },
     affordabilityFloor: { solo: 950, couple: 1350 },
+    /** Local cost level vs. a US baseline of 100 (used to project your current spending forward) */
+    costIndex: 42,
     visa: {
       complexity: 4,
       label: "Higher — financial thresholds apply",
@@ -242,6 +250,8 @@ export const DESTINATIONS: Destination[] = [
     tagline: "Nature-first living within easy reach of North America",
     budget: { solo: [1600, 2800], couple: [2100, 3600] },
     affordabilityFloor: { solo: 1300, couple: 1800 },
+    /** Local cost level vs. a US baseline of 100 (used to project your current spending forward) */
+    costIndex: 58,
     visa: {
       complexity: 2,
       label: "Simpler — clear pension route",
@@ -297,6 +307,8 @@ export const DESTINATIONS: Destination[] = [
     tagline: "Big-country infrastructure, superb healthcare, Mediterranean rhythm",
     budget: { solo: [1900, 3200], couple: [2500, 4300] },
     affordabilityFloor: { solo: 1700, couple: 2300 },
+    /** Local cost level vs. a US baseline of 100 (used to project your current spending forward) */
+    costIndex: 66,
     visa: {
       complexity: 4,
       label: "Higher — consulate-led, income tested",

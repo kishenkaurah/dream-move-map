@@ -37,6 +37,44 @@ const SAVINGS_MIDPOINT: Record<string, number> = {
   over_500k: 750000,
 };
 
+/** Typical current monthly household spend at home, in USD. */
+const SPEND_MIDPOINT: Record<string, number> = {
+  under_2000: 1700,
+  "2000_3000": 2500,
+  "3000_4500": 3700,
+  "4500_6500": 5500,
+  over_6500: 7500,
+};
+
+/** Cost level of the user's current home region, on the same 100 = US baseline. */
+const HOME_COST_INDEX: Record<string, number> = {
+  us_canada: 100,
+  uk: 92,
+  eu: 85,
+  australia_nz: 96,
+  other: 70,
+};
+
+/** How the user wants their lifestyle to change once abroad. */
+const SPEND_STYLE_FACTOR: Record<string, number> = {
+  trim: 0.85,
+  same: 1,
+  upgrade: 1.2,
+};
+
+/**
+ * Projects what the user would likely spend in a destination, based on what
+ * they spend at home today, adjusted for local price levels and the lifestyle
+ * they say they want. Returns null when they didn't give a usable figure.
+ */
+export function projectSpend(d: Destination, answers: Answers): number | null {
+  const spend = SPEND_MIDPOINT[str(answers, "current_spend")];
+  if (!spend) return null;
+  const homeIndex = HOME_COST_INDEX[str(answers, "home_region")] ?? 100;
+  const style = SPEND_STYLE_FACTOR[str(answers, "spend_style")] ?? 1;
+  return Math.round(((spend * (d.costIndex / homeIndex) * style) / 50) * 50);
+}
+
 const AGE_MIN: Record<string, number> = {
   under_55: 50,
   "55_59": 55,
@@ -58,6 +96,8 @@ export interface DestinationResult {
   overall: number;
   factors: FactorResult[];
   budgetRange: [number, number];
+  /** Projected monthly spend based on the user's current home spending, if given */
+  projectedSpend: number | null;
   constraints: string[];
   strengths: string[];
   headline: string;
@@ -115,7 +155,10 @@ function scoreAffordability(d: Destination, answers: Answers) {
   const income = INCOME_MIDPOINT[str(answers, "income")] ?? 2000;
   const savings = SAVINGS_MIDPOINT[str(answers, "savings")] ?? 0;
   const [low, high] = couple ? d.budget.couple : d.budget.solo;
-  const mid = (low + high) / 2;
+  const typicalMid = (low + high) / 2;
+  const projected = projectSpend(d, answers);
+  // Their own spending habits carry most of the weight when we know them.
+  const mid = projected ? projected * 0.6 + typicalMid * 0.4 : typicalMid;
   // Savings provide a modest monthly cushion in the model (2% annual draw).
   const effective = income + (savings * 0.02) / 12;
   const ratio = effective / mid;
@@ -127,6 +170,9 @@ function scoreAffordability(d: Destination, answers: Answers) {
   else if (ratio >= 0.6) score = 20 + ((ratio - 0.6) / 0.2) * 30;
   else score = clamp(ratio * 33);
 
+  const projectedNote = projected
+    ? ` Based on what you spend at home today, we'd expect you to spend around $${projected.toLocaleString()}/month here.`
+    : "";
   const note =
     ratio >= 1.2
       ? `Your income comfortably covers a typical ${couple ? "couple's" : "solo"} budget of $${low.toLocaleString()}–$${high.toLocaleString()}/month.`
@@ -136,7 +182,16 @@ function scoreAffordability(d: Destination, answers: Answers) {
 
   const floor = couple ? d.affordabilityFloor.couple : d.affordabilityFloor.solo;
   const constrained = effective < floor;
-  return { score: clamp(score), note, constrained, floor, low, high, effective };
+  return {
+    score: clamp(score),
+    note: note + projectedNote,
+    constrained,
+    floor,
+    low,
+    high,
+    effective,
+    projected,
+  };
 }
 
 function scoreVisa(d: Destination, answers: Answers) {
@@ -346,6 +401,7 @@ export function scoreDestination(d: Destination, answers: Answers): DestinationR
     overall: Math.round(overall),
     factors,
     budgetRange: couple ? d.budget.couple : d.budget.solo,
+    projectedSpend: aff.projected,
     constraints,
     strengths,
     headline,
