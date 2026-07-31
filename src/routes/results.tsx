@@ -152,7 +152,14 @@ function ResultsPage() {
           </Tabs>
 
           <div className="mt-10 space-y-6">
-            <LeadCapture matches={top3.map(toReportMatch)} answers={answers.answers} />
+            <LeadCapture
+              matches={top3.map(toReportMatch)}
+              answers={
+                Object.fromEntries(
+                  Object.entries(answers.answers).filter(([, v]) => v !== undefined),
+                ) as Record<string, string | string[]>
+              }
+            />
             <Disclaimer />
             <div className="rounded-xl border border-border bg-card p-5">
               <h2 className="display text-lg">Also scored</h2>
