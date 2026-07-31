@@ -3,6 +3,9 @@
  * ---------------------------
  * Edit question copy, order and options here. Each option `id` is what the
  * scoring engine reads, so keep ids stable when editing labels.
+ *
+ * Kept deliberately short (12 steps). Anything the engine can infer or safely
+ * default is not asked — see src/lib/scoring.ts for those defaults.
  */
 
 export interface QuestionOption {
@@ -77,23 +80,10 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: "savings",
-    step: 5,
-    title: "Roughly what savings or investments will you have?",
-    help: "Some visa routes accept savings in place of income.",
-    type: "single",
-    options: [
-      { id: "under_50k", label: "Under $50,000" },
-      { id: "50_150k", label: "$50,000 – $150,000" },
-      { id: "150_500k", label: "$150,000 – $500,000" },
-      { id: "over_500k", label: "More than $500,000" },
-    ],
-  },
-  {
     id: "current_spend",
-    step: 6,
+    step: 5,
     title: "What do you spend each month at home today?",
-    help: "Housing, food, utilities, transport and everyday costs combined, in US dollars. We use this to project your spending abroad.",
+    help: "Housing, food, utilities, transport and everyday costs combined, in US dollars. We use this to project your spending in each city.",
     type: "single",
     options: [
       { id: "under_2000", label: "Under $2,000" },
@@ -106,7 +96,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "spend_style",
-    step: 7,
+    step: 6,
     title: "How would you like your spending to change abroad?",
     help: "Applied to the projection of your current costs at local prices.",
     type: "single",
@@ -118,7 +108,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "climate",
-    step: 8,
+    step: 7,
     title: "What climate suits you best?",
     type: "single",
     options: [
@@ -130,7 +120,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "setting",
-    step: 9,
+    step: 8,
     title: "Where would you like to wake up most mornings?",
     type: "single",
     options: [
@@ -142,7 +132,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "healthcare_importance",
-    step: 10,
+    step: 9,
     title: "How important is healthcare quality and access?",
     type: "single",
     options: [
@@ -154,7 +144,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "english",
-    step: 11,
+    step: 10,
     title: "How much do you need English in daily life?",
     type: "single",
     options: [
@@ -165,7 +155,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "family_proximity",
-    step: 12,
+    step: 11,
     title: "How important is staying within easy reach of family?",
     type: "single",
     options: [
@@ -175,65 +165,8 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: "housing",
-    step: 13,
-    title: "Do you expect to rent or buy?",
-    type: "single",
-    options: [
-      { id: "rent", label: "Rent — keep it flexible" },
-      { id: "buy", label: "Buy a home" },
-      { id: "unsure", label: "Not sure yet" },
-    ],
-  },
-  {
-    id: "pace",
-    step: 14,
-    title: "What pace of life are you after?",
-    type: "single",
-    options: [
-      { id: "relaxed", label: "Slow and quiet" },
-      { id: "balanced", label: "Balanced — some buzz, some calm" },
-      { id: "lively", label: "Lively and social" },
-    ],
-  },
-  {
-    id: "bureaucracy",
-    step: 15,
-    title: "How much paperwork and cultural adjustment can you tolerate?",
-    help: "Residency renewals, translations, appointments and local admin.",
-    type: "single",
-    options: [
-      { id: "low", label: "Very little — I want it simple" },
-      { id: "medium", label: "Some — if the payoff is worth it" },
-      { id: "high", label: "A lot — I find it part of the adventure" },
-    ],
-  },
-  {
-    id: "tax",
-    step: 16,
-    title: "How sensitive are you to taxation of your retirement income?",
-    type: "single",
-    options: [
-      { id: "low", label: "Not a major factor" },
-      { id: "medium", label: "Somewhat — I'd like to keep it efficient" },
-      { id: "high", label: "Very — tax treatment could decide it" },
-    ],
-  },
-  {
-    id: "timeframe",
-    step: 17,
-    title: "When do you intend to relocate?",
-    type: "single",
-    options: [
-      { id: "within_6", label: "Within 6 months" },
-      { id: "6_12", label: "In 6 to 12 months" },
-      { id: "1_2y", label: "In 1 to 2 years" },
-      { id: "exploring", label: "Still exploring the idea" },
-    ],
-  },
-  {
     id: "priorities",
-    step: 18,
+    step: 12,
     title: "What matters most in your next chapter?",
     help: "Choose up to three.",
     type: "multi",

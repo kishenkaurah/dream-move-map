@@ -23,7 +23,7 @@ export const Route = createFileRoute("/assessment")({
       {
         name: "description",
         content:
-          "Answer 18 questions about your finances, healthcare needs and lifestyle to see which overseas retirement destinations fit you best.",
+          "Answer 12 questions about your finances, healthcare needs and lifestyle to see which overseas retirement destinations fit you best.",
       },
       { property: "og:title", content: "Retirement Destination Assessment" },
       {

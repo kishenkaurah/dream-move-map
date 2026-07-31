@@ -18,7 +18,7 @@ export function ComparisonTable({ results }: { results: DestinationResult[] }) {
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
       <table className="w-full min-w-[640px] border-collapse text-sm">
         <caption className="sr-only">
-          Side-by-side comparison of your top destination matches
+          Side-by-side comparison of your top city matches
         </caption>
         <thead>
           <tr className="border-b border-border bg-secondary/50">
@@ -28,6 +28,9 @@ export function ComparisonTable({ results }: { results: DestinationResult[] }) {
             {results.map((r) => (
               <th key={r.destination.id} scope="col" className="p-3 text-left font-semibold">
                 <span aria-hidden="true">{r.destination.emoji}</span> {r.destination.name}
+                <span className="block text-xs font-normal text-muted-foreground">
+                  {r.destination.country}
+                </span>
               </th>
             ))}
           </tr>
