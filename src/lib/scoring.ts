@@ -325,7 +325,7 @@ export function computeWeights(answers: Answers): Record<FactorKey, number> {
 
   if (str(answers, "tax") === "high") w.affordability += 4;
   if (priorities.includes("cost")) w.affordability += 6;
-  if (priorities.includes("healthcare")) w.healthcare += 4;
+  // Healthcare weight is driven solely by the dedicated healthcare question.
   if (priorities.includes("easy_residency")) w.visa += 6;
   if (priorities.includes("travel_access")) w.proximity += 3;
   if (priorities.includes("nature") || priorities.includes("food_culture")) w.lifestyle += 4;
