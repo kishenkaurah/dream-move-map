@@ -60,13 +60,14 @@ export function LeadCapture({
     track("lead_submitted", { topDestinationId, newsletterOptIn: optIn });
     try {
       const result = await submitLead({
-        name: parsed.data.name || undefined,
         email: parsed.data.email,
         matches,
         newsletterOptIn: optIn,
+        ...(parsed.data.name ? { name: parsed.data.name } : {}),
         ...(answers ? { answers } : {}),
         ...(regionPreference ? { regionPreference } : {}),
       });
+
       setStatus("done");
       if (result.reportStatus === "sent") {
         track("report_emailed", { topDestinationId });
