@@ -140,6 +140,79 @@ export const ResearchPlanEmail = ({
 
 export default ResearchPlanEmail
 
+export const template = {
+  component: ResearchPlanEmail,
+  displayName: 'Research Plan',
+  subject: (data: Record<string, any>) =>
+    `Your Retire Abroad research plan — ${data.topDestination ?? 'your top matches'}`,
+  previewData: {
+    name: 'Alex',
+    topDestination: 'Lisbon',
+    topCountry: 'Portugal',
+    projectedSpend: 2900,
+    siteUrl: 'https://retireabroad.me',
+    matches: [
+      {
+        name: 'Lisbon',
+        country: 'Portugal',
+        emoji: '🇵🇹',
+        overall: 88,
+        headline:
+          'A sunny, walkable capital with strong healthcare, affordable western-Europe living and a well-trodden retiree visa path.',
+        budgetLow: 2200,
+        budgetHigh: 3600,
+        projectedSpend: 2900,
+        visaLabel: 'D7 Passive Income Visa',
+        visaNote:
+          'Requires roughly €870/mo stable passive income; popular with pensioners and remote-income retirees.',
+        strengths: [
+          'Strong private and public healthcare options',
+          'Large English-speaking retiree community',
+          'Mild winters and coastal lifestyle',
+        ],
+      },
+      {
+        name: 'Chiang Mai',
+        country: 'Thailand',
+        emoji: '🇹🇭',
+        overall: 82,
+        headline:
+          'Low cost of living, modern healthcare and a huge expat scene, with visa options opening up for long-stay retirees.',
+        budgetLow: 1200,
+        budgetHigh: 2200,
+        projectedSpend: 1700,
+        visaLabel: 'Thailand Long-Term Resident / Retirement',
+        visaNote:
+          'Retirement visa from age 50 with bank deposit or income; LTR offers 10-year path for higher earners.',
+        strengths: [
+          'Very low cost of living',
+          'Excellent private hospitals',
+          'Established expat infrastructure',
+        ],
+      },
+      {
+        name: 'Kuala Lumpur',
+        country: 'Malaysia',
+        emoji: '🇲🇾',
+        overall: 78,
+        headline:
+          'A cosmopolitan, English-friendly hub with top-tier healthcare and straightforward MM2H long-stay options.',
+        budgetLow: 1500,
+        budgetHigh: 2600,
+        projectedSpend: 2000,
+        visaLabel: 'MM2H (Malaysia My Second Home)',
+        visaNote:
+          'Long-term social visit pass requiring liquid assets and monthly offshore income; rules vary by age bracket.',
+        strengths: [
+          'English widely used',
+          'World-class private healthcare',
+          'Central travel hub for Asia',
+        ],
+      },
+    ],
+  },
+}
+
 const main = {
   backgroundColor: PAPER,
   fontFamily: '"Public Sans", ui-sans-serif, system-ui, sans-serif',
