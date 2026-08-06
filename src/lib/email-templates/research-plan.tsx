@@ -90,9 +90,8 @@ export const ResearchPlanEmail = ({
                 {topMatch.headline}
               </Text>
             )}
-            {spendText && (
-              <Text style={text} dangerouslySetInnerHTML={{ __html: spendText }} />
-            )}
+            {projectedSpendText}
+
             <Button style={button} href={siteUrl}>
               Review full results on the site
             </Button>
