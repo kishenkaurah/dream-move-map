@@ -14,7 +14,9 @@ import {
 } from "@/data/questions";
 import { CURRENCY_NAMES, currencyForCitizenship } from "@/lib/currency";
 import {
+  ASSESSMENT_VERSION,
   clearAssessment,
+  firstUnansweredStep,
   loadAssessment,
   saveAssessment,
   type AssessmentState,
@@ -45,6 +47,7 @@ function AssessmentPage() {
   const navigate = useNavigate();
   const [hydrated, setHydrated] = useState(false);
   const [state, setState] = useState<AssessmentState>({
+    version: ASSESSMENT_VERSION,
     answers: { ...DEFAULT_ANSWERS },
     stepIndex: 0,
   });
@@ -52,7 +55,12 @@ function AssessmentPage() {
 
   useEffect(() => {
     const loaded = loadAssessment();
-    setState({ ...loaded, answers: { ...DEFAULT_ANSWERS, ...loaded.answers } });
+    const answers = { ...DEFAULT_ANSWERS, ...loaded.answers };
+    setState({
+      ...loaded,
+      answers,
+      stepIndex: firstUnansweredStep(answers) ?? loaded.stepIndex,
+    });
     setHydrated(true);
     track("assessment_started", { resumed: Object.keys(loaded.answers).length > 0 });
   }, []);
@@ -134,7 +142,11 @@ function AssessmentPage() {
 
   function restart() {
     clearAssessment();
-    setState({ answers: { ...DEFAULT_ANSWERS }, stepIndex: 0 });
+    setState({
+      version: ASSESSMENT_VERSION,
+      answers: { ...DEFAULT_ANSWERS },
+      stepIndex: 0,
+    });
     setError(null);
   }
 
