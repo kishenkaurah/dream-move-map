@@ -8,7 +8,7 @@
 export type RegionId = "sea" | "europe" | "latam";
 
 export const REGION_LABELS: Record<RegionId, string> = {
-  sea: "Southeast Asia",
+  sea: "Asia",
   europe: "Europe & Mediterranean",
   latam: "Latin America",
 };
@@ -17,9 +17,16 @@ export const REGION_BY_COUNTRY: Record<string, RegionId> = {
   Thailand: "sea",
   Malaysia: "sea",
   Vietnam: "sea",
+  Philippines: "sea",
+  Indonesia: "sea",
+  Japan: "sea",
+  Taiwan: "sea",
   Portugal: "europe",
   Spain: "europe",
   Greece: "europe",
+  Italy: "europe",
+  Croatia: "europe",
+  Cyprus: "europe",
   "Costa Rica": "latam",
   Mexico: "latam",
   Panama: "latam",
