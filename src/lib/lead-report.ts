@@ -34,10 +34,12 @@ export const reportMatchSchema = z.object({
 });
 
 export const leadSubmissionSchema = z.object({
-  name: z.string().trim().min(1).max(100),
+  name: z.string().trim().max(100).optional(),
   email: z.string().trim().email().max(255),
   matches: z.array(reportMatchSchema).min(1).max(3),
   answers: z.record(z.union([z.string(), z.array(z.string())])).optional(),
+  newsletterOptIn: z.boolean().optional(),
+  regionPreference: z.string().max(40).optional(),
 });
 
 export type ReportMatch = z.infer<typeof reportMatchSchema>;

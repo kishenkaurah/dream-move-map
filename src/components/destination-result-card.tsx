@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { FactorBars } from "@/components/factor-bars";
 import type { DestinationResult } from "@/lib/scoring";
+import { formatMoney, type CurrencyCode } from "@/lib/currency";
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -30,9 +31,11 @@ export function healthcareLabel(n: number) {
 export function DestinationResultCard({
   result,
   rank,
+  currency = "USD",
 }: {
   result: DestinationResult;
   rank: number;
+  currency?: CurrencyCode;
 }) {
   const d = result.destination;
   const [low, high] = result.budgetRange;
@@ -90,13 +93,13 @@ export function DestinationResultCard({
           </p>
           <p className="display mt-1 text-2xl tabular-nums text-foreground">
             {result.projectedSpend !== null
-              ? `$${result.projectedSpend.toLocaleString()} / month`
-              : `$${low.toLocaleString()} – $${high.toLocaleString()} / month`}
+              ? `${formatMoney(result.projectedSpend, currency)} / month`
+              : `${formatMoney(low, currency)} – ${formatMoney(high, currency)} / month`}
           </p>
           {result.projectedSpend !== null && (
             <p className="mt-1 text-xs text-muted-foreground">
-              Typical range here for a {result.household.label}: ${low.toLocaleString()} – $
-              {high.toLocaleString()}
+              Typical range here for a {result.household.label}: {formatMoney(low, currency)} –{" "}
+              {formatMoney(high, currency)}
             </p>
           )}
         </div>
@@ -151,7 +154,7 @@ export function DestinationResultCard({
                     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3">
                       <span className="min-w-0 truncate text-sm text-foreground">{c.label}</span>
                       <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
-                        ${c.amount.toLocaleString()} · {c.share}%
+                        {formatMoney(c.amount, currency)} · {c.share}%
                       </span>
                     </div>
                     <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
@@ -167,7 +170,7 @@ export function DestinationResultCard({
               <p className="mt-4 text-xs text-muted-foreground">
                 An indicative split of{" "}
                 {result.projectedSpend !== null
-                  ? `your projected $${result.projectedSpend.toLocaleString()}`
+                  ? `your projected ${formatMoney(result.projectedSpend, currency)}`
                   : "a typical budget"}{" "}
                 per month for a {result.household.label}. Housing choices and healthcare cover move
                 these figures most.
@@ -215,7 +218,7 @@ export function DestinationResultCard({
                 <p className="mt-1.5 text-sm text-muted-foreground">{v.note}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {v.incomeGuide > 0
-                    ? `Income guidance around $${v.incomeGuide.toLocaleString()}/month — ${v.reason}.`
+                    ? `Income guidance around ${formatMoney(v.incomeGuide, currency)}/month — ${v.reason}.`
                     : `${v.reason.charAt(0).toUpperCase()}${v.reason.slice(1)}.`}
                 </p>
               </li>

@@ -4,14 +4,18 @@
  * Edit question copy, order and options here. Each option `id` is what the
  * scoring engine reads, so keep ids stable when editing labels.
  *
- * Kept deliberately short (12 steps). Anything the engine can infer or safely
- * default is not asked — see src/lib/scoring.ts for those defaults.
+ * Money options carry a `usd` bracket instead of a hard-coded label: the
+ * assessment renders them in the user's display currency (see
+ * src/lib/currency.ts). All underlying scoring values stay in USD.
  */
+import { formatMoney, type CurrencyCode } from "@/lib/currency";
 
 export interface QuestionOption {
   id: string;
   label: string;
   hint?: string;
+  /** Money bracket in USD: [low, high]; null means open-ended on that side. */
+  usd?: [number | null, number | null];
 }
 
 export interface Question {
@@ -23,27 +27,66 @@ export interface Question {
   /** For multi questions */
   maxSelections?: number;
   minSelections?: number;
+  /** Show the "Amounts shown in [currency]" note */
+  money?: boolean;
   options: QuestionOption[];
 }
 
+/** Renders an option label, converting money brackets to the display currency. */
+export function optionLabel(opt: QuestionOption, currency: CurrencyCode): string {
+  if (!opt.usd) return opt.label;
+  const [low, high] = opt.usd;
+  if (low === null && high !== null) return `Under ${formatMoney(high, currency)}`;
+  if (high === null && low !== null) return `More than ${formatMoney(low, currency)}`;
+  if (low !== null && high !== null)
+    return `${formatMoney(low, currency)} – ${formatMoney(high, currency)}`;
+  return opt.label;
+}
+
+const REGION_OPTIONS: QuestionOption[] = [
+  { id: "us_canada", label: "United States or Canada" },
+  { id: "uk", label: "United Kingdom" },
+  { id: "eu", label: "European Union or EEA" },
+  { id: "australia_nz", label: "Australia or New Zealand" },
+  { id: "other", label: "Somewhere else" },
+];
+
 export const QUESTIONS: Question[] = [
   {
-    id: "home_region",
+    id: "citizenship",
     step: 1,
-    title: "Where do you currently live and hold citizenship?",
-    help: "This shapes visa options and how far you'd be from home.",
+    title: "What citizenship do you hold?",
+    help: "Your citizenship determines which visas and residency pathways are open to you.",
+    type: "single",
+    options: REGION_OPTIONS,
+  },
+  {
+    id: "residence",
+    step: 2,
+    title: "Where do you currently live?",
+    help: "This shapes distance from home, flight times, and family proximity scoring.",
     type: "single",
     options: [
-      { id: "us_canada", label: "United States or Canada" },
-      { id: "uk", label: "United Kingdom" },
-      { id: "eu", label: "European Union / EEA" },
-      { id: "australia_nz", label: "Australia or New Zealand" },
-      { id: "other", label: "Somewhere else" },
+      { id: "same", label: "Same as my citizenship" },
+      ...REGION_OPTIONS,
+    ],
+  },
+  {
+    id: "region_pref",
+    step: 3,
+    title: "Do you already have a region in mind?",
+    help: "We still score everywhere — this only filters what we show first.",
+    type: "single",
+    options: [
+      { id: "sea", label: "Southeast Asia" },
+      { id: "europe", label: "Europe & Mediterranean" },
+      { id: "latam", label: "Latin America" },
+      { id: "any", label: "No preference — show me everything" },
     ],
   },
   {
     id: "age",
-    step: 2,
+    step: 4,
     title: "Which age range will you be when you move?",
     help: "Retirement visas have minimum ages; younger movers often use digital nomad routes instead.",
     type: "single",
@@ -57,7 +100,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "household",
-    step: 3,
+    step: 5,
     title: "Who is moving with you?",
     type: "single",
     options: [
@@ -67,39 +110,40 @@ export const QUESTIONS: Question[] = [
       { id: "couple_kids", label: "Partner and children at home" },
     ],
   },
-
   {
     id: "income",
-    step: 4,
+    step: 6,
     title: "What monthly retirement income do you expect?",
-    help: "All sources combined, after tax, in US dollars.",
+    help: "All sources combined, after tax.",
     type: "single",
+    money: true,
     options: [
-      { id: "under_1500", label: "Under $1,500" },
-      { id: "1500_2500", label: "$1,500 – $2,500" },
-      { id: "2500_4000", label: "$2,500 – $4,000" },
-      { id: "4000_6000", label: "$4,000 – $6,000" },
-      { id: "over_6000", label: "More than $6,000" },
+      { id: "under_1500", label: "Under $1,500", usd: [null, 1500] },
+      { id: "1500_2500", label: "$1,500 – $2,500", usd: [1500, 2500] },
+      { id: "2500_4000", label: "$2,500 – $4,000", usd: [2500, 4000] },
+      { id: "4000_6000", label: "$4,000 – $6,000", usd: [4000, 6000] },
+      { id: "over_6000", label: "More than $6,000", usd: [6000, null] },
     ],
   },
   {
     id: "current_spend",
-    step: 5,
+    step: 7,
     title: "What do you spend each month at home today?",
-    help: "Housing, food, utilities, transport and everyday costs combined, in US dollars. We use this to project your spending in each city.",
+    help: "Housing, food, utilities, transport and everyday costs combined. We use this to project your spending in each city.",
     type: "single",
+    money: true,
     options: [
-      { id: "under_2000", label: "Under $2,000" },
-      { id: "2000_3000", label: "$2,000 – $3,000" },
-      { id: "3000_4500", label: "$3,000 – $4,500" },
-      { id: "4500_6500", label: "$4,500 – $6,500" },
-      { id: "over_6500", label: "More than $6,500" },
+      { id: "under_2000", label: "Under $2,000", usd: [null, 2000] },
+      { id: "2000_3000", label: "$2,000 – $3,000", usd: [2000, 3000] },
+      { id: "3000_4500", label: "$3,000 – $4,500", usd: [3000, 4500] },
+      { id: "4500_6500", label: "$4,500 – $6,500", usd: [4500, 6500] },
+      { id: "over_6500", label: "More than $6,500", usd: [6500, null] },
       { id: "unsure", label: "I'm not sure" },
     ],
   },
   {
     id: "spend_style",
-    step: 6,
+    step: 8,
     title: "How would you like your spending to change abroad?",
     help: "Applied to the projection of your current costs at local prices.",
     type: "single",
@@ -111,7 +155,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "climate",
-    step: 7,
+    step: 9,
     title: "What climate suits you best?",
     type: "single",
     options: [
@@ -123,7 +167,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "setting",
-    step: 8,
+    step: 10,
     title: "Where would you like to wake up most mornings?",
     type: "single",
     options: [
@@ -135,7 +179,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "healthcare_importance",
-    step: 9,
+    step: 11,
     title: "How important is healthcare quality and access?",
     type: "single",
     options: [
@@ -147,7 +191,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "english",
-    step: 10,
+    step: 12,
     title: "How much do you need English in daily life?",
     type: "single",
     options: [
@@ -158,7 +202,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "family_proximity",
-    step: 11,
+    step: 13,
     title: "How important is staying within easy reach of family?",
     type: "single",
     options: [
@@ -169,7 +213,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: "priorities",
-    step: 12,
+    step: 14,
     title: "What matters most in your next chapter?",
     help: "Choose up to three.",
     type: "multi",
@@ -191,3 +235,9 @@ export const QUESTIONS: Question[] = [
 export const TOTAL_STEPS = QUESTIONS.length;
 
 export type Answers = Record<string, string | string[] | undefined>;
+
+/** Defaults applied when a question hasn't been answered yet. */
+export const DEFAULT_ANSWERS: Answers = {
+  residence: "same",
+  region_pref: "any",
+};

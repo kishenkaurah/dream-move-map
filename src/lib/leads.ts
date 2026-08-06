@@ -5,10 +5,12 @@
 import type { ReportMatch } from "./lead-report";
 
 export interface SubmitLeadInput {
-  name: string;
+  name?: string;
   email: string;
   matches: ReportMatch[];
   answers?: Record<string, string | string[]>;
+  newsletterOptIn?: boolean;
+  regionPreference?: string;
 }
 
 export interface SubmitLeadResult {

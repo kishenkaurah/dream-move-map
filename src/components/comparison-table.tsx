@@ -1,5 +1,6 @@
 import { healthcareLabel, visaComplexityLabel } from "@/components/destination-result-card";
 import type { DestinationResult } from "@/lib/scoring";
+import { formatMoney, type CurrencyCode } from "@/lib/currency";
 import { FACTOR_LABELS, type FactorKey } from "@/data/destinations";
 
 const FACTOR_ORDER: FactorKey[] = [
@@ -13,7 +14,13 @@ const FACTOR_ORDER: FactorKey[] = [
   "bureaucracy",
 ];
 
-export function ComparisonTable({ results }: { results: DestinationResult[] }) {
+export function ComparisonTable({
+  results,
+  currency = "USD",
+}: {
+  results: DestinationResult[];
+  currency?: CurrencyCode;
+}) {
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
       <table className="w-full min-w-[640px] border-collapse text-sm">
@@ -54,14 +61,14 @@ export function ComparisonTable({ results }: { results: DestinationResult[] }) {
               <td key={r.destination.id} className="p-3 tabular-nums">
                 {r.projectedSpend !== null ? (
                   <>
-                    <span className="font-semibold">${r.projectedSpend.toLocaleString()}</span>
+                    <span className="font-semibold">{formatMoney(r.projectedSpend, currency)}</span>
                     <span className="block text-xs font-normal text-muted-foreground">
-                      typical ${r.budgetRange[0].toLocaleString()} – $
-                      {r.budgetRange[1].toLocaleString()}
+                      typical {formatMoney(r.budgetRange[0], currency)} –{" "}
+                      {formatMoney(r.budgetRange[1], currency)}
                     </span>
                   </>
                 ) : (
-                  `$${r.budgetRange[0].toLocaleString()} – $${r.budgetRange[1].toLocaleString()}`
+                  `${formatMoney(r.budgetRange[0], currency)} – ${formatMoney(r.budgetRange[1], currency)}`
                 )}
               </td>
             ))}

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -19,11 +20,6 @@ import type { ReportMatch } from "@/lib/lead-report";
 import { track } from "@/lib/analytics";
 
 const leadSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, { message: "Please enter your name" })
-    .max(100, { message: "Name must be under 100 characters" }),
   email: z
     .string()
     .trim()
@@ -34,45 +30,44 @@ const leadSchema = z.object({
 export function LeadCapture({
   matches,
   answers,
+  regionPreference,
 }: {
   matches: ReportMatch[];
   answers?: Record<string, string | string[]>;
+  regionPreference?: string;
 }) {
   const topDestinationId = matches[0]?.id;
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [errors, setErrors] = useState<{ name?: string | undefined; email?: string | undefined }>({});
+  const [optIn, setOptIn] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
-  const [emailed, setEmailed] = useState(false);
-  const [sentTo, setSentTo] = useState("");
   const [bookingOpen, setBookingOpen] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = leadSchema.safeParse({ name, email });
+    const parsed = leadSchema.safeParse({ email });
     if (!parsed.success) {
-      const flat = parsed.error.flatten().fieldErrors;
-      setErrors({ name: flat.name?.[0], email: flat.email?.[0] });
+      setError(parsed.error.flatten().fieldErrors.email?.[0]);
       return;
     }
-    setErrors({});
+    setError(undefined);
     setStatus("saving");
-    track("lead_submitted", { topDestinationId });
+    track("lead_submitted", { topDestinationId, newsletterOptIn: optIn });
     try {
       const result = await submitLead({
-        ...parsed.data,
+        email: parsed.data.email,
         matches,
+        newsletterOptIn: optIn,
         ...(answers ? { answers } : {}),
+        ...(regionPreference ? { regionPreference } : {}),
       });
-      setEmailed(result.reportStatus === "sent");
-      setSentTo(parsed.data.email);
       setStatus("done");
       if (result.reportStatus === "sent") {
         track("report_emailed", { topDestinationId });
-        toast.success("Report sent", { description: `Check ${parsed.data.email}.` });
+        toast.success("Sent — check your inbox");
       } else {
-        toast.success("Details saved", {
-          description: "We'll email your full report as soon as sending is live.",
+        toast.success("Saved", {
+          description: "We'll email your research plan as soon as sending is live.",
         });
       }
     } catch (err) {
@@ -87,10 +82,11 @@ export function LeadCapture({
     <>
       <Card className="border-primary/25 bg-accent/40 shadow-[var(--shadow-card)]">
         <CardHeader>
-          <CardTitle className="display text-xl">Want the detailed report?</CardTitle>
+          <CardTitle className="display text-xl">Take your research plan with you</CardTitle>
           <CardDescription>
-            Optional. Your full results above stay visible whether or not you share your details.
-            The report adds cost breakdowns, visa route notes and a research checklist.
+            Get your full results — destination scores, budget breakdowns, visa complexity notes
+            and your personalised list of questions to ask before committing — as a PDF in your
+            inbox. One email, no spam, unsubscribe anytime.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -98,36 +94,16 @@ export function LeadCapture({
             <div className="flex items-start gap-3 rounded-lg border border-success/30 bg-background p-4">
               <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-success" aria-hidden="true" />
               <div>
-                <p className="font-medium">
-                  {emailed ? "Your report is on its way." : "Thanks — your details are saved."}
-                </p>
+                <p className="font-medium">Sent — check your inbox</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {emailed
-                    ? `We've emailed your full report to ${sentTo}. Check spam if it hasn't arrived in a few minutes.`
-                    : "We've saved your request and your matches. Your full report will be emailed as soon as sending is live."}
+                  Your results stay right here on this page too. If it hasn't arrived in a few
+                  minutes, check your spam folder.
                 </p>
               </div>
             </div>
           ) : (
-            <form onSubmit={onSubmit} noValidate className="grid gap-4 sm:grid-cols-2">
-              <div className="grid gap-1.5">
-                <Label htmlFor="lead-name">Name</Label>
-                <Input
-                  id="lead-name"
-                  value={name}
-                  maxLength={100}
-                  autoComplete="name"
-                  onChange={(e) => setName(e.target.value)}
-                  aria-invalid={!!errors.name}
-                  aria-describedby={errors.name ? "lead-name-error" : undefined}
-                />
-                {errors.name && (
-                  <p id="lead-name-error" role="alert" className="text-xs text-destructive">
-                    {errors.name}
-                  </p>
-                )}
-              </div>
-              <div className="grid gap-1.5">
+            <form onSubmit={onSubmit} noValidate className="grid gap-4">
+              <div className="grid gap-1.5 sm:max-w-md">
                 <Label htmlFor="lead-email">Email</Label>
                 <Input
                   id="lead-email"
@@ -136,19 +112,30 @@ export function LeadCapture({
                   maxLength={255}
                   autoComplete="email"
                   onChange={(e) => setEmail(e.target.value)}
-                  aria-invalid={!!errors.email}
-                  aria-describedby={errors.email ? "lead-email-error" : undefined}
+                  aria-invalid={!!error}
+                  aria-describedby={error ? "lead-email-error" : undefined}
                 />
-                {errors.email && (
+                {error && (
                   <p id="lead-email-error" role="alert" className="text-xs text-destructive">
-                    {errors.email}
+                    {error}
                   </p>
                 )}
               </div>
-              <div className="flex flex-col gap-3 sm:col-span-2 sm:flex-row">
+              <div className="flex items-start gap-2.5">
+                <Checkbox
+                  id="lead-optin"
+                  checked={optIn}
+                  onCheckedChange={(v) => setOptIn(v === true)}
+                  className="mt-0.5"
+                />
+                <Label htmlFor="lead-optin" className="text-sm font-normal text-muted-foreground">
+                  Also send me occasional destination deep-dives (monthly at most)
+                </Label>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <Button type="submit" disabled={status === "saving"} className="sm:w-auto">
                   <Mail aria-hidden="true" />
-                  {status === "saving" ? "Sending…" : "Email my report"}
+                  {status === "saving" ? "Sending…" : "Email my research plan"}
                 </Button>
                 <Button
                   type="button"

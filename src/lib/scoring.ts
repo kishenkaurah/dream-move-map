@@ -22,6 +22,28 @@ import {
 } from "@/data/destinations";
 import type { Answers } from "@/data/questions";
 import { VISA_ROUTES, VISA_ROUTE_TYPE_LABEL } from "@/data/visa-routes";
+import { currencyForCitizenship, formatMoney, type CurrencyCode } from "@/lib/currency";
+
+/** Citizenship drives visa and residency pathway logic. */
+export function citizenshipOf(answers: Answers): HomeRegion {
+  const v = str(answers, "citizenship");
+  return (v || "other") as HomeRegion;
+}
+
+/** Current residence drives distance, flight times and cost-of-living baseline. */
+export function residenceOf(answers: Answers): HomeRegion {
+  const v = str(answers, "residence");
+  if (!v || v === "same") return citizenshipOf(answers);
+  return v as HomeRegion;
+}
+
+export function displayCurrency(answers: Answers): CurrencyCode {
+  return currencyForCitizenship(str(answers, "citizenship"));
+}
+
+/** Countries where an EU/EEA citizen has freedom of movement. */
+const EU_COUNTRIES = new Set(["Portugal", "Spain", "Greece"]);
+
 
 const INCOME_MIDPOINT: Record<string, number> = {
   under_1500: 1200,
@@ -98,10 +120,11 @@ export function household(answers: Answers): Household {
 export function projectSpend(d: Destination, answers: Answers): number | null {
   const spend = SPEND_MIDPOINT[str(answers, "current_spend")];
   if (!spend) return null;
-  const homeIndex = HOME_COST_INDEX[str(answers, "home_region")] ?? 100;
+  const homeIndex = HOME_COST_INDEX[residenceOf(answers)] ?? 100;
   const style = SPEND_STYLE_FACTOR[str(answers, "spend_style")] ?? 1;
   return Math.round(((spend * (d.costIndex / homeIndex) * style) / 50) * 50);
 }
+
 
 /** Rough share of a monthly budget by category, used for the spend breakdown. */
 const SPEND_SHARES: { label: string; share: number; hint: string }[] = [
@@ -164,6 +187,7 @@ export interface VisaOption {
 /** Which residency routes a person of this age and income could plausibly use. */
 export function visaOptions(d: Destination, answers: Answers): VisaOption[] {
   const routes = VISA_ROUTES[d.country] ?? [];
+  const cur = displayCurrency(answers);
   const age = AGE_MIN[str(answers, "age")] ?? 60;
   const income = INCOME_MIDPOINT[str(answers, "income")] ?? 2000;
 
@@ -179,7 +203,7 @@ export function visaOptions(d: Destination, answers: Answers): VisaOption[] {
       const ratio = income / r.incomeGuide;
       if (ratio < 0.8) {
         eligibility = "unlikely";
-        reasons.push(`income guidance around $${r.incomeGuide.toLocaleString()}/month`);
+        reasons.push(`income guidance around ${formatMoney(r.incomeGuide, cur)}/month`);
       } else if (ratio < 1.1 && eligibility !== "unlikely") {
         eligibility = "possible";
         reasons.push("your income is close to the usual threshold");
@@ -280,6 +304,7 @@ export function computeWeights(answers: Answers): Record<FactorKey, number> {
 }
 
 function scoreAffordability(d: Destination, answers: Answers) {
+  const cur = displayCurrency(answers);
   const hh = household(answers);
   const couple = hh.partner;
   const income = INCOME_MIDPOINT[str(answers, "income")] ?? 2000;
@@ -303,14 +328,14 @@ function scoreAffordability(d: Destination, answers: Answers) {
   else score = clamp(ratio * 33);
 
   const projectedNote = projected
-    ? ` Based on what you spend at home today, we'd expect you to spend around $${projected.toLocaleString()}/month here.`
+    ? ` Based on what you spend at home today, we'd expect you to spend around ${formatMoney(projected, cur)}/month here.`
     : "";
   const note =
     ratio >= 1.2
-      ? `Your income comfortably covers a typical ${hh.label} budget of $${low.toLocaleString()}–$${high.toLocaleString()}/month.`
+      ? `Your income comfortably covers a typical ${hh.label} budget of ${formatMoney(low, cur)}–${formatMoney(high, cur)}/month.`
       : ratio >= 0.95
-        ? `Your income roughly matches the typical budget of $${low.toLocaleString()}–$${high.toLocaleString()}/month, with little slack.`
-        : `Typical costs of $${low.toLocaleString()}–$${high.toLocaleString()}/month run ahead of your expected income.`;
+        ? `Your income roughly matches the typical budget of ${formatMoney(low, cur)}–${formatMoney(high, cur)}/month, with little slack.`
+        : `Typical costs of ${formatMoney(low, cur)}–${formatMoney(high, cur)}/month run ahead of your expected income.`;
 
   const floor = Math.round(
     (couple ? d.affordabilityFloor.couple : d.affordabilityFloor.solo) * hh.multiplier,
@@ -329,7 +354,16 @@ function scoreAffordability(d: Destination, answers: Answers) {
 }
 
 function scoreVisa(d: Destination, answers: Answers) {
+  const cur = displayCurrency(answers);
+  const citizenship = citizenshipOf(answers);
   const income = INCOME_MIDPOINT[str(answers, "income")] ?? 2000;
+  if (citizenship === "eu" && EU_COUNTRIES.has(d.country)) {
+    return {
+      score: 100,
+      note: "As an EU/EEA citizen you have freedom of movement here — no visa is required, only a simple registration once you settle.",
+      constrained: false,
+    };
+  }
   const savings = SAVINGS_MIDPOINT[str(answers, "savings")] ?? 0;
   const age = AGE_MIN[str(answers, "age")] ?? 60;
 
@@ -363,7 +397,7 @@ function scoreVisa(d: Destination, answers: Answers) {
   notes.push(d.visa.label + ".");
   if (incomeGap < 1)
     notes.push(
-      `Commonly referenced income guidance is around $${d.visa.incomeGuide.toLocaleString()}/month, above your expected income.`,
+      `Commonly referenced income guidance is around ${formatMoney(d.visa.incomeGuide, cur)}/month, above your expected income.`,
     );
   if (ageIssue)
     notes.push(
@@ -440,7 +474,7 @@ function scoreLanguage(d: Destination, answers: Answers) {
 }
 
 function scoreProximity(d: Destination, answers: Answers) {
-  const region = (str(answers, "home_region") || "other") as HomeRegion;
+  const region = residenceOf(answers);
   const hours = d.travelHours[region] ?? 12;
   const importance = str(answers, "family_proximity");
   const raw = clamp(100 - Math.max(0, hours - 3) * 4.5);
@@ -472,6 +506,7 @@ function scoreBureaucracy(d: Destination, answers: Answers) {
 }
 
 export function scoreDestination(d: Destination, answers: Answers): DestinationResult {
+  const cur = displayCurrency(answers);
   const weights = computeWeights(answers);
   const hh = household(answers);
 
@@ -504,13 +539,13 @@ export function scoreDestination(d: Destination, answers: Answers): DestinationR
   const constraints: string[] = [];
   if (aff.constrained) {
     constraints.push(
-      `Your expected income sits below the realistic floor of about $${aff.floor.toLocaleString()}/month for a ${hh.label} here. This is a blocking issue, not a small gap.`,
+      `Your expected income sits below the realistic floor of about ${formatMoney(aff.floor, cur)}/month for a ${hh.label} here. This is a blocking issue, not a small gap.`,
     );
     overall = Math.min(overall, 45);
   }
   if (visa.constrained) {
     constraints.push(
-      `Income evidence for the main residency route is typically around $${d.visa.incomeGuide.toLocaleString()}/month, well above your expected income. Alternative routes would need investigating.`,
+      `Income evidence for the main residency route is typically around ${formatMoney(d.visa.incomeGuide, cur)}/month, well above your expected income. Alternative routes would need investigating.`,
     );
     overall = Math.min(overall, 55);
   }

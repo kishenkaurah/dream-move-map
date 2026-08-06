@@ -20,8 +20,10 @@ export type Database = {
           created_at: string
           email: string
           id: string
-          name: string
+          name: string | null
+          newsletter_opt_in: boolean
           projected_spend: number | null
+          region_preference: string | null
           report_error: string | null
           report_status: string
           top_destination_id: string | null
@@ -34,8 +36,10 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
-          name: string
+          name?: string | null
+          newsletter_opt_in?: boolean
           projected_spend?: number | null
+          region_preference?: string | null
           report_error?: string | null
           report_status?: string
           top_destination_id?: string | null
@@ -48,8 +52,10 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
-          name?: string
+          name?: string | null
+          newsletter_opt_in?: boolean
           projected_spend?: number | null
+          region_preference?: string | null
           report_error?: string | null
           report_status?: string
           top_destination_id?: string | null

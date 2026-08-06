@@ -22,7 +22,7 @@ export const Route = createFileRoute("/api/public/leads")({
         if (!parsed.success) {
           return json({ error: "Please check the details you entered." }, 400);
         }
-        const { name, email, matches, answers } = parsed.data;
+        const { name, email, matches, answers, newsletterOptIn, regionPreference } = parsed.data;
         const normalizedEmail = email.toLowerCase();
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -46,7 +46,9 @@ export const Route = createFileRoute("/api/public/leads")({
         const { data: lead, error } = await supabaseAdmin
           .from("leads")
           .insert({
-            name,
+            name: name ?? null,
+            newsletter_opt_in: newsletterOptIn ?? false,
+            region_preference: regionPreference ?? null,
             email: normalizedEmail,
             top_destination_id: top?.id ?? null,
             top_destination_label: top ? `${top.name}, ${top.country}` : null,
@@ -67,7 +69,7 @@ export const Route = createFileRoute("/api/public/leads")({
         const { sendReportEmail } = await import("@/lib/send-report.server");
         const outcome = await sendReportEmail({
           leadId: lead.id,
-          name,
+          name: name ?? normalizedEmail.split("@")[0] ?? "there",
           email: normalizedEmail,
           matches,
         });

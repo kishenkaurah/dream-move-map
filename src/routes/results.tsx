@@ -13,6 +13,8 @@ import { clearAssessment, loadAssessment } from "@/lib/assessment-storage";
 import { rankDestinations, topMatches } from "@/lib/scoring";
 import { toReportMatch } from "@/lib/lead-report";
 import { QUESTIONS } from "@/data/questions";
+import { REGION_LABELS, regionForCountry, regionFromAnswer } from "@/data/regions";
+import { displayCurrency } from "@/lib/scoring";
 
 export const Route = createFileRoute("/results")({
   head: () => ({
@@ -52,10 +54,31 @@ function ResultsPage() {
     return answered.length === QUESTIONS.length;
   }, [answers]);
 
-  const results = useMemo(
+  const allResults = useMemo(
     () => (complete ? rankDestinations(answers.answers) : []),
     [answers, complete],
   );
+  const currency = useMemo(() => displayCurrency(answers.answers), [answers]);
+  const regionPref = regionFromAnswer(
+    typeof answers.answers["region_pref"] === "string"
+      ? (answers.answers["region_pref"] as string)
+      : undefined,
+  );
+  const results = useMemo(
+    () =>
+      regionPref
+        ? allResults.filter((r) => regionForCountry(r.destination.country) === regionPref)
+        : allResults,
+    [allResults, regionPref],
+  );
+  const outsideRegion = useMemo(
+    () =>
+      regionPref
+        ? allResults.filter((r) => regionForCountry(r.destination.country) !== regionPref)
+        : [],
+    [allResults, regionPref],
+  );
+  const [showOutside, setShowOutside] = useState(false);
   const top3 = useMemo(() => topMatches(results, 3), [results]);
   const rest = results.filter((r) => !top3.includes(r));
 
@@ -84,7 +107,7 @@ function ResultsPage() {
             <CardContent className="pt-6">
               <h1 className="display text-2xl">No completed assessment yet</h1>
               <p className="mt-3 text-muted-foreground">
-                Finish the 12-question assessment and your matches will appear here. Your progress
+                Finish the assessment and your matches will appear here. Your progress
                 is saved on this device, so you can pick up where you left off.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -122,7 +145,8 @@ function ResultsPage() {
               Your top {top3.length} retirement city matches
             </h1>
             <p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground">
-              Ranked against the profile you described, using eight weighted factors. Open the
+              {regionPref ? `Filtered to ${REGION_LABELS[regionPref]}, ranked ` : "Ranked "}
+              against the profile you described, using eight weighted factors. Open the
               breakdown on any card to see precisely how each score was reached — and where a
               destination has a blocking constraint rather than a minor drawback.
             </p>
@@ -138,12 +162,17 @@ function ResultsPage() {
 
             <TabsContent value="matches" className="mt-6 space-y-6">
               {top3.map((r, i) => (
-                <DestinationResultCard key={r.destination.id} result={r} rank={i + 1} />
+                <DestinationResultCard
+                  key={r.destination.id}
+                  result={r}
+                  rank={i + 1}
+                  currency={currency}
+                />
               ))}
             </TabsContent>
 
             <TabsContent value="compare" className="mt-6 space-y-4">
-              <ComparisonTable results={top3} />
+              <ComparisonTable results={top3} currency={currency} />
               <p className="text-xs text-muted-foreground">
                 Scores are relative to your answers only. A low score here does not mean a
                 destination is a poor place to live.
@@ -154,6 +183,7 @@ function ResultsPage() {
           <div className="mt-10 space-y-6">
             <LeadCapture
               matches={top3.map(toReportMatch)}
+              {...(regionPref ? { regionPreference: regionPref } : {})}
               answers={
                 Object.fromEntries(
                   Object.entries(answers.answers).filter(([, v]) => v !== undefined),
@@ -180,6 +210,45 @@ function ResultsPage() {
                 ))}
               </ul>
             </div>
+
+            {regionPref && outsideRegion.length > 0 && (
+              <div className="rounded-xl border border-border bg-card p-5">
+                {showOutside ? (
+                  <>
+                    <h2 className="display text-lg">
+                      Outside {REGION_LABELS[regionPref]}
+                    </h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Scored exactly the same way — worth a look before you commit to a region.
+                    </p>
+                    <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {outsideRegion.map((r) => (
+                        <li
+                          key={r.destination.id}
+                          className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm"
+                        >
+                          <span className="min-w-0 truncate">
+                            <span aria-hidden="true">{r.destination.emoji}</span>{" "}
+                            {r.destination.name}, {r.destination.country}
+                          </span>
+                          <span className="shrink-0 tabular-nums text-muted-foreground">
+                            {r.overall}%
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowOutside(true)}
+                    className="focus-ring text-sm underline underline-offset-4"
+                  >
+                    See how destinations outside {REGION_LABELS[regionPref]} would have scored
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>
