@@ -203,7 +203,7 @@ export function DestinationResultCard({
                   </Badge>
                   <Badge
                     variant={v.eligibility === "likely" ? "default" : "secondary"}
-                    className="font-normal capitalize"
+                    className="font-normal"
                   >
                     {v.eligibility === "likely"
                       ? "Likely a fit"
