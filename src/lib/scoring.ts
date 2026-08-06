@@ -203,7 +203,7 @@ export function visaOptions(d: Destination, answers: Answers): VisaOption[] {
       const ratio = income / r.incomeGuide;
       if (ratio < 0.8) {
         eligibility = "unlikely";
-        reasons.push(`income guidance around ${formatMoney(r.incomeGuide, cur)}/month`);
+        reasons.push("your income is below the usual threshold");
       } else if (ratio < 1.1 && eligibility !== "unlikely") {
         eligibility = "possible";
         reasons.push("your income is close to the usual threshold");
