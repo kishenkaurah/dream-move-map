@@ -20,12 +20,14 @@ import type { ReportMatch } from "@/lib/lead-report";
 import { track } from "@/lib/analytics";
 
 const leadSchema = z.object({
+  name: z.string().trim().max(100, { message: "Name must be under 100 characters" }).optional(),
   email: z
     .string()
     .trim()
     .email({ message: "Please enter a valid email address" })
     .max(255, { message: "Email must be under 255 characters" }),
 });
+
 
 export function LeadCapture({
   matches,
@@ -37,17 +39,20 @@ export function LeadCapture({
   regionPreference?: string;
 }) {
   const topDestinationId = matches[0]?.id;
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [optIn, setOptIn] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
   const [bookingOpen, setBookingOpen] = useState(false);
 
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = leadSchema.safeParse({ email });
+    const parsed = leadSchema.safeParse({ name, email });
     if (!parsed.success) {
-      setError(parsed.error.flatten().fieldErrors.email?.[0]);
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      setError(fieldErrors.email?.[0] ?? fieldErrors.name?.[0]);
       return;
     }
     setError(undefined);
@@ -58,9 +63,11 @@ export function LeadCapture({
         email: parsed.data.email,
         matches,
         newsletterOptIn: optIn,
+        ...(parsed.data.name ? { name: parsed.data.name } : {}),
         ...(answers ? { answers } : {}),
         ...(regionPreference ? { regionPreference } : {}),
       });
+
       setStatus("done");
       if (result.reportStatus === "sent") {
         track("report_emailed", { topDestinationId });
@@ -77,6 +84,7 @@ export function LeadCapture({
       });
     }
   }
+
 
   return (
     <>
@@ -104,6 +112,18 @@ export function LeadCapture({
           ) : (
             <form onSubmit={onSubmit} noValidate className="grid gap-4">
               <div className="grid gap-1.5 sm:max-w-md">
+                <Label htmlFor="lead-name">Name (optional)</Label>
+                <Input
+                  id="lead-name"
+                  type="text"
+                  value={name}
+                  maxLength={100}
+                  autoComplete="name"
+                  placeholder="First name"
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5 sm:max-w-md">
                 <Label htmlFor="lead-email">Email</Label>
                 <Input
                   id="lead-email"
@@ -115,6 +135,7 @@ export function LeadCapture({
                   aria-invalid={!!error}
                   aria-describedby={error ? "lead-email-error" : undefined}
                 />
+
                 {error && (
                   <p id="lead-email-error" role="alert" className="text-xs text-destructive">
                     {error}
