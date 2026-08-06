@@ -218,7 +218,7 @@ export function DestinationResultCard({
                 <p className="mt-1.5 text-sm text-muted-foreground">{v.note}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {v.incomeGuide > 0
-                    ? `Income guidance around ${formatMoney(v.incomeGuide, currency)}/month — ${v.reason}.`
+                    ? `Income guidance around ${formatMoney(v.incomeGuide, currency)}/month${v.reason ? ` — ${v.reason}` : ""}.`
                     : `${v.reason.charAt(0).toUpperCase()}${v.reason.slice(1)}.`}
                 </p>
               </li>
