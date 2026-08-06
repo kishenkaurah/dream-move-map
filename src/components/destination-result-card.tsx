@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, HelpCircle, Minus } from "lucide-react";
+import { AlertTriangle, Check, Minus, Stamp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -82,23 +82,33 @@ export function DestinationResultCard({
           </div>
         )}
 
-        <dl className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-          <Stat
-            label="Est. monthly budget"
-            value={`$${low.toLocaleString()} – $${high.toLocaleString()}`}
-          />
+        <div className="rounded-lg border border-border bg-secondary/40 p-4">
+          <p className="text-[11px] tracking-wide text-muted-foreground uppercase">
+            {result.projectedSpend !== null
+              ? "Your projected monthly spend"
+              : "Typical monthly budget"}
+          </p>
+          <p className="display mt-1 text-2xl tabular-nums text-foreground">
+            {result.projectedSpend !== null
+              ? `$${result.projectedSpend.toLocaleString()} / month`
+              : `$${low.toLocaleString()} – $${high.toLocaleString()} / month`}
+          </p>
           {result.projectedSpend !== null && (
-            <Stat
-              label="Your projected spend"
-              value={`$${result.projectedSpend.toLocaleString()} / month`}
-            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Typical range here for a {result.household.label}: ${low.toLocaleString()} – $
+              {high.toLocaleString()}
+            </p>
           )}
+        </div>
+
+        <dl className="grid grid-cols-2 gap-3">
           <Stat label="Visa complexity" value={visaComplexityLabel(d.visa.complexity)} />
           <Stat
             label="Healthcare"
             value={`${healthcareLabel(d.healthcare.rating)} (${d.healthcare.rating}/5)`}
           />
         </dl>
+
 
 
         <div className="grid gap-5 sm:grid-cols-2">
@@ -130,6 +140,40 @@ export function DestinationResultCard({
         </div>
 
         <Accordion type="single" collapsible className="rounded-lg border border-border px-3">
+          <AccordionItem value="spend">
+            <AccordionTrigger className="text-sm font-semibold">
+              Where the money goes — monthly breakdown
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <ul className="space-y-2">
+                {result.breakdown.map((c) => (
+                  <li key={c.label}>
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3">
+                      <span className="min-w-0 truncate text-sm text-foreground">{c.label}</span>
+                      <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+                        ${c.amount.toLocaleString()} · {c.share}%
+                      </span>
+                    </div>
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className="h-full rounded-full bg-primary/70"
+                        style={{ width: `${Math.min(100, c.share * 2.5)}%` }}
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">{c.hint}</p>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-xs text-muted-foreground">
+                An indicative split of{" "}
+                {result.projectedSpend !== null
+                  ? `your projected $${result.projectedSpend.toLocaleString()}`
+                  : "a typical budget"}{" "}
+                per month for a {result.household.label}. Housing choices and healthcare cover move
+                these figures most.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
           <AccordionItem value="why" className="border-b-0">
             <AccordionTrigger className="text-sm font-semibold">
               Why this matched — factor breakdown
@@ -146,18 +190,40 @@ export function DestinationResultCard({
 
         <div>
           <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <HelpCircle className="size-4 text-primary" aria-hidden="true" />
-            Questions to investigate next
+            <Stamp className="size-4 text-primary" aria-hidden="true" />
+            Visa routes you could use
           </h4>
-          <ul className="mt-2 space-y-1.5">
-            {d.investigate.map((q) => (
-              <li key={q} className="text-sm text-muted-foreground">
-                • {q}
+          <ul className="mt-3 space-y-3">
+            {result.visaOptions.map((v) => (
+              <li key={v.id} className="rounded-lg border border-border bg-secondary/30 p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-foreground">{v.name}</span>
+                  <Badge variant="outline" className="font-normal">
+                    {v.typeLabel}
+                  </Badge>
+                  <Badge
+                    variant={v.eligibility === "likely" ? "default" : "secondary"}
+                    className="font-normal"
+                  >
+                    {v.eligibility === "likely"
+                      ? "Likely a fit"
+                      : v.eligibility === "possible"
+                        ? "Possible"
+                        : "Unlikely for now"}
+                  </Badge>
+                </div>
+                <p className="mt-1.5 text-sm text-muted-foreground">{v.note}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {v.incomeGuide > 0
+                    ? `Income guidance around $${v.incomeGuide.toLocaleString()}/month — ${v.reason}.`
+                    : `${v.reason.charAt(0).toUpperCase()}${v.reason.slice(1)}.`}
+                </p>
               </li>
             ))}
           </ul>
           <p className="mt-3 text-xs text-muted-foreground">{d.visa.note}</p>
         </div>
+
 
         <Badge variant="secondary" className="font-normal">
           Verify all visa, tax and healthcare details independently
