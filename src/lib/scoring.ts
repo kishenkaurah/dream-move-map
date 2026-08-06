@@ -21,6 +21,7 @@ import {
   type HomeRegion,
 } from "@/data/destinations";
 import type { Answers } from "@/data/questions";
+import { VISA_ROUTES, VISA_ROUTE_TYPE_LABEL } from "@/data/visa-routes";
 
 const INCOME_MIDPOINT: Record<string, number> = {
   under_1500: 1200,
@@ -62,6 +63,33 @@ const SPEND_STYLE_FACTOR: Record<string, number> = {
   upgrade: 1.2,
 };
 
+/** Household shape derived from the single "who is moving" answer. */
+export interface Household {
+  partner: boolean;
+  children: boolean;
+  /** Cost multiplier applied on top of the solo/couple budget bands */
+  multiplier: number;
+  label: string;
+}
+
+export function household(answers: Answers): Household {
+  const v = str(answers, "household");
+  const partner = v === "couple" || v === "couple_kids";
+  const children = v === "solo_kids" || v === "couple_kids";
+  return {
+    partner,
+    children,
+    multiplier: children ? 1.3 : 1,
+    label: children
+      ? partner
+        ? "family with children"
+        : "single parent with children"
+      : partner
+        ? "couple"
+        : "single person",
+  };
+}
+
 /**
  * Projects what the user would likely spend in a destination, based on what
  * they spend at home today, adjusted for local price levels and the lifestyle
@@ -75,13 +103,109 @@ export function projectSpend(d: Destination, answers: Answers): number | null {
   return Math.round(((spend * (d.costIndex / homeIndex) * style) / 50) * 50);
 }
 
-const AGE_MIN: Record<string, number> = {
-  under_55: 50,
-  "55_59": 55,
-  "60_64": 60,
-  "65_69": 65,
-  "70_plus": 70,
+/** Rough share of a monthly budget by category, used for the spend breakdown. */
+const SPEND_SHARES: { label: string; share: number; hint: string }[] = [
+  { label: "Rent / housing", share: 0.34, hint: "A comfortable long-term rental in a central area" },
+  { label: "Groceries", share: 0.16, hint: "Supermarket and local market shopping" },
+  { label: "Eating out & nightlife", share: 0.13, hint: "Restaurants, cafés and going out" },
+  { label: "Utilities & internet", share: 0.07, hint: "Power, water, mobile and home broadband" },
+  { label: "Transport", share: 0.07, hint: "Local transport, taxis or running a small car" },
+  { label: "Healthcare & insurance", share: 0.11, hint: "Private cover plus routine appointments" },
+  { label: "Travel & leisure", share: 0.08, hint: "Trips home, weekends away, hobbies" },
+  { label: "Everything else", share: 0.04, hint: "Household help, admin, visa fees and buffer" },
+];
+
+const SCHOOLING = {
+  label: "Schooling & childcare",
+  share: 0.14,
+  hint: "International or bilingual school fees and activities",
 };
+
+export interface SpendCategory {
+  label: string;
+  hint: string;
+  amount: number;
+  share: number;
+}
+
+/** Splits a monthly total into indicative categories. */
+export function spendBreakdown(total: number, hh: Household): SpendCategory[] {
+  const rows = hh.children ? [...SPEND_SHARES, SCHOOLING] : SPEND_SHARES;
+  const sum = rows.reduce((a, r) => a + r.share, 0);
+  return rows.map((r) => {
+    const share = r.share / sum;
+    return {
+      label: r.label,
+      hint: r.hint,
+      share: Math.round(share * 100),
+      amount: Math.round((total * share) / 10) * 10,
+    };
+  });
+}
+
+const AGE_MIN: Record<string, number> = {
+  under_35: 30,
+  "35_44": 35,
+  "45_54": 45,
+  "55_64": 55,
+  "65_plus": 65,
+};
+
+export interface VisaOption {
+  id: string;
+  name: string;
+  typeLabel: string;
+  note: string;
+  incomeGuide: number;
+  eligibility: "likely" | "possible" | "unlikely";
+  reason: string;
+}
+
+/** Which residency routes a person of this age and income could plausibly use. */
+export function visaOptions(d: Destination, answers: Answers): VisaOption[] {
+  const routes = VISA_ROUTES[d.country] ?? [];
+  const age = AGE_MIN[str(answers, "age")] ?? 60;
+  const income = INCOME_MIDPOINT[str(answers, "income")] ?? 2000;
+
+  return routes.map((r) => {
+    let eligibility: VisaOption["eligibility"] = "likely";
+    const reasons: string[] = [];
+
+    if (r.minAge && age < r.minAge) {
+      eligibility = "unlikely";
+      reasons.push(`typically requires age ${r.minAge}+`);
+    }
+    if (r.incomeGuide > 0) {
+      const ratio = income / r.incomeGuide;
+      if (ratio < 0.8) {
+        eligibility = "unlikely";
+        reasons.push(`income guidance around $${r.incomeGuide.toLocaleString()}/month`);
+      } else if (ratio < 1.1 && eligibility !== "unlikely") {
+        eligibility = "possible";
+        reasons.push("your income is close to the usual threshold");
+      }
+    }
+    if (r.requiresWork && eligibility !== "unlikely") {
+      if (age >= 65) {
+        eligibility = "possible";
+        reasons.push("needs ongoing remote work income, not just a pension");
+      } else {
+        reasons.push("needs remote work income from outside the country");
+      }
+    }
+    if (!reasons.length) reasons.push("your age and income fit the usual guidance");
+
+    return {
+      id: r.id,
+      name: r.name,
+      typeLabel: VISA_ROUTE_TYPE_LABEL[r.type],
+      note: r.note,
+      incomeGuide: r.incomeGuide,
+      eligibility,
+      reason: reasons.join("; "),
+    };
+  });
+}
 
 export interface FactorResult {
   key: FactorKey;
@@ -98,10 +222,15 @@ export interface DestinationResult {
   budgetRange: [number, number];
   /** Projected monthly spend based on the user's current home spending, if given */
   projectedSpend: number | null;
+  /** Indicative category split of the spend figure shown on the card */
+  breakdown: SpendCategory[];
+  household: Household;
+  visaOptions: VisaOption[];
   constraints: string[];
   strengths: string[];
   headline: string;
 }
+
 
 const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n));
 
@@ -151,10 +280,13 @@ export function computeWeights(answers: Answers): Record<FactorKey, number> {
 }
 
 function scoreAffordability(d: Destination, answers: Answers) {
-  const couple = str(answers, "household") === "couple";
+  const hh = household(answers);
+  const couple = hh.partner;
   const income = INCOME_MIDPOINT[str(answers, "income")] ?? 2000;
   const savings = SAVINGS_MIDPOINT[str(answers, "savings")] ?? 0;
-  const [low, high] = couple ? d.budget.couple : d.budget.solo;
+  const base = couple ? d.budget.couple : d.budget.solo;
+  const low = Math.round(base[0] * hh.multiplier);
+  const high = Math.round(base[1] * hh.multiplier);
   const typicalMid = (low + high) / 2;
   const projected = projectSpend(d, answers);
   // Their own spending habits carry most of the weight when we know them.
@@ -175,12 +307,14 @@ function scoreAffordability(d: Destination, answers: Answers) {
     : "";
   const note =
     ratio >= 1.2
-      ? `Your income comfortably covers a typical ${couple ? "couple's" : "solo"} budget of $${low.toLocaleString()}–$${high.toLocaleString()}/month.`
+      ? `Your income comfortably covers a typical ${hh.label} budget of $${low.toLocaleString()}–$${high.toLocaleString()}/month.`
       : ratio >= 0.95
         ? `Your income roughly matches the typical budget of $${low.toLocaleString()}–$${high.toLocaleString()}/month, with little slack.`
         : `Typical costs of $${low.toLocaleString()}–$${high.toLocaleString()}/month run ahead of your expected income.`;
 
-  const floor = couple ? d.affordabilityFloor.couple : d.affordabilityFloor.solo;
+  const floor = Math.round(
+    (couple ? d.affordabilityFloor.couple : d.affordabilityFloor.solo) * hh.multiplier,
+  );
   const constrained = effective < floor;
   return {
     score: clamp(score),
@@ -212,8 +346,11 @@ function scoreVisa(d: Destination, answers: Answers) {
   }
 
   let ageIssue = false;
+  const hasNomadRoute = (VISA_ROUTES[d.country] ?? []).some((r) => r.type === "digital_nomad");
   if (d.visa.minAge && age < d.visa.minAge) {
-    score -= 25;
+    // A digital nomad route softens the blow for people moving before
+    // traditional retirement age.
+    score -= hasNomadRoute ? 10 : 25;
     ageIssue = true;
   }
 
@@ -228,7 +365,10 @@ function scoreVisa(d: Destination, answers: Answers) {
     notes.push(
       `Commonly referenced income guidance is around $${d.visa.incomeGuide.toLocaleString()}/month, above your expected income.`,
     );
-  if (ageIssue) notes.push(`The main retirement route typically requires age ${d.visa.minAge}+.`);
+  if (ageIssue)
+    notes.push(
+      `The main retirement route typically requires age ${d.visa.minAge}+${hasNomadRoute ? ", but a digital nomad route is available" : ""}.`,
+    );
 
   const constrained = incomeGap < 0.7 && savings < 150000;
   return { score: clamp(score), note: notes.join(" "), constrained };
@@ -333,7 +473,8 @@ function scoreBureaucracy(d: Destination, answers: Answers) {
 
 export function scoreDestination(d: Destination, answers: Answers): DestinationResult {
   const weights = computeWeights(answers);
-  const couple = str(answers, "household") === "couple";
+  const hh = household(answers);
+
 
   const aff = scoreAffordability(d, answers);
   const visa = scoreVisa(d, answers);
@@ -363,7 +504,7 @@ export function scoreDestination(d: Destination, answers: Answers): DestinationR
   const constraints: string[] = [];
   if (aff.constrained) {
     constraints.push(
-      `Your expected income sits below the realistic floor of about $${aff.floor.toLocaleString()}/month for a ${couple ? "couple" : "single person"} here. This is a blocking issue, not a small gap.`,
+      `Your expected income sits below the realistic floor of about $${aff.floor.toLocaleString()}/month for a ${hh.label} here. This is a blocking issue, not a small gap.`,
     );
     overall = Math.min(overall, 45);
   }
@@ -403,16 +544,25 @@ export function scoreDestination(d: Destination, answers: Answers): DestinationR
     ? `${d.name} matches parts of your profile, but there are blocking issues to resolve first.`
     : `${d.name} scores well on ${(strengths[0] ?? "overall fit").toLowerCase()} and ${(strengths[1] ?? "lifestyle").toLowerCase()} for the profile you described.`;
 
+  const budgetRange: [number, number] = [
+    Math.round((aff.low / 50) * 50),
+    Math.round((aff.high / 50) * 50),
+  ];
+
   return {
     destination: d,
     overall: Math.round(overall),
     factors,
-    budgetRange: couple ? d.budget.couple : d.budget.solo,
+    budgetRange,
     projectedSpend: aff.projected,
+    breakdown: spendBreakdown(aff.projected ?? (aff.low + aff.high) / 2, hh),
+    household: hh,
+    visaOptions: visaOptions(d, answers),
     constraints,
     strengths,
     headline,
   };
+
 }
 
 import { FACTOR_LABELS as FACTOR_LABELS_LOCAL } from "@/data/destinations";

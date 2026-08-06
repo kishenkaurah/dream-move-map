@@ -48,26 +48,24 @@ export function ComparisonTable({ results }: { results: DestinationResult[] }) {
           </tr>
           <tr className="border-b border-border">
             <th scope="row" className="p-3 text-left font-medium">
-              Est. monthly budget
+              Monthly spend
             </th>
             {results.map((r) => (
               <td key={r.destination.id} className="p-3 tabular-nums">
-                ${r.budgetRange[0].toLocaleString()} – ${r.budgetRange[1].toLocaleString()}
+                {r.projectedSpend !== null ? (
+                  <>
+                    <span className="font-semibold">${r.projectedSpend.toLocaleString()}</span>
+                    <span className="block text-xs font-normal text-muted-foreground">
+                      typical ${r.budgetRange[0].toLocaleString()} – $
+                      {r.budgetRange[1].toLocaleString()}
+                    </span>
+                  </>
+                ) : (
+                  `$${r.budgetRange[0].toLocaleString()} – $${r.budgetRange[1].toLocaleString()}`
+                )}
               </td>
             ))}
           </tr>
-          {results.some((r) => r.projectedSpend !== null) && (
-            <tr className="border-b border-border">
-              <th scope="row" className="p-3 text-left font-medium">
-                Your projected spend
-              </th>
-              {results.map((r) => (
-                <td key={r.destination.id} className="p-3 tabular-nums">
-                  {r.projectedSpend !== null ? `$${r.projectedSpend.toLocaleString()}` : "—"}
-                </td>
-              ))}
-            </tr>
-          )}
           <tr className="border-b border-border">
             <th scope="row" className="p-3 text-left font-medium">
               Visa complexity
