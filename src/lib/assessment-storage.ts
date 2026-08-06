@@ -40,3 +40,15 @@ export function clearAssessment() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(KEY);
 }
+
+/**
+ * True only when the stored assessment is complete against the CURRENT
+ * question set — stale saves from an older question set are ignored.
+ */
+export function hasCompletedAssessment(state: AssessmentState = loadAssessment()) {
+  if (!state.completedAt) return false;
+  return QUESTIONS.every((q) => {
+    const v = state.answers[q.id];
+    return Array.isArray(v) ? v.length > 0 : Boolean(v);
+  });
+}
