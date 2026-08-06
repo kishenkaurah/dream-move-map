@@ -39,11 +39,13 @@ export function LeadCapture({
   regionPreference?: string;
 }) {
   const topDestinationId = matches[0]?.id;
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [optIn, setOptIn] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
   const [bookingOpen, setBookingOpen] = useState(false);
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
