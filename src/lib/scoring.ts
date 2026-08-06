@@ -23,7 +23,6 @@ import {
 import type { Answers } from "@/data/questions";
 import { VISA_ROUTES, VISA_ROUTE_TYPE_LABEL } from "@/data/visa-routes";
 import { currencyForCitizenship, formatMoney, type CurrencyCode } from "@/lib/currency";
-import { regionForCountry, regionFromAnswer } from "@/data/regions";
 
 /** Citizenship drives visa and residency pathway logic. */
 export function citizenshipOf(answers: Answers): HomeRegion {
