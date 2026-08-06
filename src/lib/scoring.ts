@@ -78,12 +78,8 @@ const HOME_COST_INDEX: Record<string, number> = {
   other: 70,
 };
 
-/** How the user wants their lifestyle to change once abroad. */
-const SPEND_STYLE_FACTOR: Record<string, number> = {
-  trim: 0.85,
-  same: 1,
-  upgrade: 1.2,
-};
+
+
 
 /** Household shape derived from the single "who is moving" answer. */
 export interface Household {
