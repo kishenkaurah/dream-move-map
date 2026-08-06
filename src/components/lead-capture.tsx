@@ -49,9 +49,10 @@ export function LeadCapture({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = leadSchema.safeParse({ email });
+    const parsed = leadSchema.safeParse({ name, email });
     if (!parsed.success) {
-      setError(parsed.error.flatten().fieldErrors.email?.[0]);
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      setError(fieldErrors.email?.[0] ?? fieldErrors.name?.[0]);
       return;
     }
     setError(undefined);
@@ -59,6 +60,7 @@ export function LeadCapture({
     track("lead_submitted", { topDestinationId, newsletterOptIn: optIn });
     try {
       const result = await submitLead({
+        name: parsed.data.name || undefined,
         email: parsed.data.email,
         matches,
         newsletterOptIn: optIn,
@@ -81,6 +83,7 @@ export function LeadCapture({
       });
     }
   }
+
 
   return (
     <>
