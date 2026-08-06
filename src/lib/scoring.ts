@@ -43,7 +43,7 @@ export function displayCurrency(answers: Answers): CurrencyCode {
 }
 
 /** Countries where an EU/EEA citizen has freedom of movement. */
-const EU_COUNTRIES = new Set(["Portugal", "Spain", "Greece"]);
+const EU_COUNTRIES = new Set(["Portugal", "Spain", "Greece", "Italy", "Croatia", "Cyprus"]);
 
 
 const INCOME_MIDPOINT: Record<string, number> = {

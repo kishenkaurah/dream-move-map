@@ -78,7 +78,7 @@ export const QUESTIONS: Question[] = [
     help: "We still score everywhere — this only filters what we show first.",
     type: "single",
     options: [
-      { id: "sea", label: "Southeast Asia" },
+      { id: "sea", label: "Asia" },
       { id: "europe", label: "Europe & Mediterranean" },
       { id: "latam", label: "Latin America" },
       { id: "any", label: "No preference — show me everything" },
@@ -219,7 +219,7 @@ export const QUESTIONS: Question[] = [
     type: "multi",
     minSelections: 1,
     options: [
-      { id: "sea", label: "Southeast Asia" },
+      { id: "sea", label: "Asia" },
       { id: "europe", label: "Europe & the Mediterranean" },
       { id: "latam", label: "Latin America" },
       { id: "some_travel", label: "I've travelled a little, but not to these regions" },
