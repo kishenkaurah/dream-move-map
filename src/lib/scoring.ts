@@ -286,7 +286,24 @@ export interface DestinationResult {
   constraints: string[];
   strengths: string[];
   headline: string;
+  /** Note about how familiar this region already is to the user. Never scored. */
+  familiarityNote: string | null;
 }
+
+/**
+ * Turns the prior-experience answer into a research framing note. Display only:
+ * it never touches any factor score.
+ */
+export function familiarityNote(d: Destination, answers: Answers): string | null {
+  const seen = list(answers, "prior_experience");
+  if (!seen.length) return null;
+  const region = regionForCountry(d.country);
+  if (!region) return null;
+  return seen.includes(region)
+    ? "You already know this region — your research can focus on the practical details rather than first impressions."
+    : "Worth a scouting trip before committing — this would be a bigger adjustment.";
+}
+
 
 
 const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n));
