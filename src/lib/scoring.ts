@@ -121,10 +121,11 @@ export function household(answers: Answers): Household {
 export function projectSpend(d: Destination, answers: Answers): number | null {
   const spend = SPEND_MIDPOINT[str(answers, "current_spend")];
   if (!spend) return null;
-  const homeIndex = HOME_COST_INDEX[str(answers, "home_region")] ?? 100;
+  const homeIndex = HOME_COST_INDEX[residenceOf(answers)] ?? 100;
   const style = SPEND_STYLE_FACTOR[str(answers, "spend_style")] ?? 1;
   return Math.round(((spend * (d.costIndex / homeIndex) * style) / 50) * 50);
 }
+
 
 /** Rough share of a monthly budget by category, used for the spend breakdown. */
 const SPEND_SHARES: { label: string; share: number; hint: string }[] = [
