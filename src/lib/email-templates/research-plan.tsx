@@ -60,7 +60,7 @@ export const ResearchPlanEmail = ({
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>
-        Your Retire Abroad research plan — {topDestination}, {topCountry} and {matches.length} more matches
+        Your Retire Abroad research plan — {topDestination}, {topCountry} and {String(matches.length)} more matches
       </Preview>
       <Body style={main}>
         <Container style={container}>
