@@ -39,7 +39,7 @@ export const Route = createFileRoute("/")({
 const STEPS = [
   {
     icon: Compass,
-    title: "Answer 12 short questions",
+    title: "Answer 14 short questions",
     body: "Finances, healthcare, climate, language, family proximity and how much paperwork you can stomach.",
   },
   {
