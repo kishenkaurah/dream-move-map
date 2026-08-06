@@ -613,9 +613,10 @@ export function scoreDestination(d: Destination, answers: Answers): DestinationR
     : `${d.name} scores well on ${(strengths[0] ?? "overall fit").toLowerCase()} and ${(strengths[1] ?? "lifestyle").toLowerCase()} for the profile you described.`;
 
   const budgetRange: [number, number] = [
-    Math.round((aff.low / 50) * 50),
-    Math.round((aff.high / 50) * 50),
+    Math.floor(aff.low / 50) * 50,
+    Math.ceil(aff.high / 50) * 50,
   ];
+
 
   return {
     destination: d,
