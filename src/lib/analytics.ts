@@ -24,23 +24,33 @@ export interface TrackedEvent {
 
 const STORE_KEY = "ran.analytics.v1";
 
-const measurementId = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY;
+const measurementId =
+  import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"];
 
 let gaInitialized = false;
+
+type GtagCommand = "js" | "config" | "event";
+
+interface GtagFunction {
+  (command: "js", date: Date): void;
+  (command: "config", measurementId: string, config?: Record<string, unknown>): void;
+  (command: "event", name: string, params?: Record<string, unknown>): void;
+  (command: GtagCommand, ...args: unknown[]): void;
+}
 
 declare global {
   interface Window {
     dataLayer?: unknown[];
-    gtag?: Gtag.Gtag;
+    gtag?: GtagFunction;
   }
 }
 
-function ensureGtag() {
+function ensureGtag(): GtagFunction | undefined {
   if (typeof window === "undefined") return undefined;
 
   if (!window.gtag) {
     window.dataLayer = window.dataLayer || [];
-    const gtag: Gtag.Gtag = function (...args: unknown[]) {
+    const gtag: GtagFunction = (...args: unknown[]) => {
       window.dataLayer!.push(args);
     };
     window.gtag = gtag;
@@ -76,6 +86,7 @@ export function trackPageView(path: string) {
     page_title: document.title,
   });
 }
+
 
 export function track(event: AnalyticsEvent, payload?: Record<string, unknown>) {
   const entry: TrackedEvent = { event, payload, at: new Date().toISOString() };
