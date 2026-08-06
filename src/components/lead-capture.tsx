@@ -112,6 +112,18 @@ export function LeadCapture({
           ) : (
             <form onSubmit={onSubmit} noValidate className="grid gap-4">
               <div className="grid gap-1.5 sm:max-w-md">
+                <Label htmlFor="lead-name">Name (optional)</Label>
+                <Input
+                  id="lead-name"
+                  type="text"
+                  value={name}
+                  maxLength={100}
+                  autoComplete="name"
+                  placeholder="First name"
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5 sm:max-w-md">
                 <Label htmlFor="lead-email">Email</Label>
                 <Input
                   id="lead-email"
@@ -123,6 +135,7 @@ export function LeadCapture({
                   aria-invalid={!!error}
                   aria-describedby={error ? "lead-email-error" : undefined}
                 />
+
                 {error && (
                   <p id="lead-email-error" role="alert" className="text-xs text-destructive">
                     {error}
