@@ -9,7 +9,12 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { DestinationResultCard } from "@/components/destination-result-card";
 import { ComparisonTable } from "@/components/comparison-table";
 import { LeadCapture } from "@/components/lead-capture";
-import { clearAssessment, loadAssessment } from "@/lib/assessment-storage";
+import {
+  clearAssessment,
+  loadAssessment,
+  saveAssessment,
+  unansweredQuestions,
+} from "@/lib/assessment-storage";
 import { rankDestinations, topMatches } from "@/lib/scoring";
 import { toReportMatch } from "@/lib/lead-report";
 import { QUESTIONS } from "@/data/questions";
@@ -46,13 +51,11 @@ function ResultsPage() {
     setHydrated(true);
   }, []);
 
-  const complete = useMemo(() => {
-    const answered = QUESTIONS.filter((q) => {
-      const v = answers.answers[q.id];
-      return Array.isArray(v) ? v.length > 0 : Boolean(v);
-    });
-    return answered.length === QUESTIONS.length;
-  }, [answers]);
+  const missingQuestions = useMemo(
+    () => unansweredQuestions(answers.answers),
+    [answers],
+  );
+  const complete = missingQuestions.length === 0;
 
   const allResults = useMemo(
     () => (complete ? rankDestinations(answers.answers) : []),
@@ -87,6 +90,14 @@ function ResultsPage() {
     void navigate({ to: "/assessment" });
   }
 
+  function continueAssessment() {
+    const firstMissing = missingQuestions[0];
+    if (!firstMissing) return;
+    const stepIndex = QUESTIONS.findIndex((question) => question.id === firstMissing.id);
+    saveAssessment({ ...answers, stepIndex: Math.max(0, stepIndex), completedAt: undefined });
+    void navigate({ to: "/assessment" });
+  }
+
   if (!hydrated) {
     return (
       <div className="min-h-screen bg-background">
@@ -105,14 +116,18 @@ function ResultsPage() {
         <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-16 sm:px-6">
           <Card className="shadow-[var(--shadow-card)]">
             <CardContent className="pt-6">
-              <h1 className="display text-2xl">No completed assessment yet</h1>
+              <h1 className="display text-2xl">Your assessment needs a few answers</h1>
               <p className="mt-3 text-muted-foreground">
-                Finish the assessment and your matches will appear here. Your progress
-                is saved on this device, so you can pick up where you left off.
+                Complete the unanswered questions below and your matches will appear here.
               </p>
+              <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-foreground">
+                {missingQuestions.map((question) => (
+                  <li key={question.id}>{question.title}</li>
+                ))}
+              </ul>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Button asChild>
-                  <Link to="/assessment">Continue assessment</Link>
+                <Button type="button" onClick={continueAssessment}>
+                  Continue assessment
                 </Button>
                 <Button asChild variant="outline">
                   <Link to="/">Back home</Link>
