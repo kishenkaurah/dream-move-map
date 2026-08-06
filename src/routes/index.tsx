@@ -15,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Disclaimer } from "@/components/disclaimer";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { DESTINATIONS } from "@/data/destinations";
-import { loadAssessment } from "@/lib/assessment-storage";
+import { hasCompletedAssessment } from "@/lib/assessment-storage";
 import heroImage from "@/assets/hero-coast.jpg";
 
 export const Route = createFileRoute("/")({
