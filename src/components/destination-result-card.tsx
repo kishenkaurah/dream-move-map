@@ -48,10 +48,10 @@ export function DestinationResultCard({
             <div className="flex items-center gap-2">
               <span className="eyebrow">Match #{rank}</span>
             </div>
-            <h3 className="display mt-1 flex min-w-0 items-center gap-2 text-2xl">
+            <h2 className="display mt-1 flex min-w-0 items-center gap-2 text-2xl">
               <span aria-hidden="true">{d.emoji}</span>
               <span className="truncate">{d.name}</span>
-            </h3>
+            </h2>
             <p className="mt-0.5 text-xs tracking-wide text-muted-foreground uppercase">
               {d.country}
             </p>
