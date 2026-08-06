@@ -54,13 +54,6 @@ const INCOME_MIDPOINT: Record<string, number> = {
   over_6000: 7500,
 };
 
-const SAVINGS_MIDPOINT: Record<string, number> = {
-  under_50k: 30000,
-  "50_150k": 100000,
-  "150_500k": 300000,
-  over_500k: 750000,
-};
-
 /** Typical current monthly household spend at home, in USD. */
 const SPEND_MIDPOINT: Record<string, number> = {
   under_2000: 1700,
@@ -337,11 +330,6 @@ export function computeWeights(answers: Answers): Record<FactorKey, number> {
   if (family === "very") w.proximity += 9;
   if (family === "not") w.proximity -= 4;
 
-  const bureaucracy = str(answers, "bureaucracy");
-  if (bureaucracy === "low") w.bureaucracy += 7;
-  if (bureaucracy === "high") w.bureaucracy -= 3;
-
-  if (str(answers, "tax") === "high") w.affordability += 4;
   if (priorities.includes("cost")) w.affordability += 6;
   // Healthcare weight is driven solely by the dedicated healthcare question.
   if (priorities.includes("easy_residency")) w.visa += 6;
@@ -359,7 +347,6 @@ function scoreAffordability(d: Destination, answers: Answers) {
   const hh = household(answers);
   const couple = hh.partner;
   const income = INCOME_MIDPOINT[str(answers, "income")] ?? 2000;
-  const savings = SAVINGS_MIDPOINT[str(answers, "savings")] ?? 0;
   const base = couple ? d.budget.couple : d.budget.solo;
   const low = Math.round(base[0] * hh.multiplier);
   const high = Math.round(base[1] * hh.multiplier);
@@ -367,8 +354,7 @@ function scoreAffordability(d: Destination, answers: Answers) {
   const projected = projectSpend(d, answers);
   // Their own spending habits carry most of the weight when we know them.
   const mid = projected ? projected * 0.6 + typicalMid * 0.4 : typicalMid;
-  // Savings provide a modest monthly cushion in the model (2% annual draw).
-  const effective = income + (savings * 0.02) / 12;
+  const effective = income;
   const ratio = effective / mid;
 
   let score: number;
@@ -415,7 +401,6 @@ function scoreVisa(d: Destination, answers: Answers) {
       constrained: false,
     };
   }
-  const savings = SAVINGS_MIDPOINT[str(answers, "savings")] ?? 0;
   const age = AGE_MIN[str(answers, "age")] ?? 60;
 
   // Base score from route complexity (1 simplest → 5 hardest)
@@ -424,8 +409,6 @@ function scoreVisa(d: Destination, answers: Answers) {
   const incomeGap = income / d.visa.incomeGuide;
   if (incomeGap < 1) {
     score -= (1 - incomeGap) * 70;
-    // Strong savings can partially substitute for income on several routes
-    if (savings >= 150000) score += 12;
   } else if (incomeGap > 1.4) {
     score += 8;
   }
@@ -439,11 +422,6 @@ function scoreVisa(d: Destination, answers: Answers) {
     ageIssue = true;
   }
 
-  const tolerance = str(answers, "bureaucracy") || "medium";
-  if (tolerance === "low" && d.visa.complexity >= 4) score -= 8;
-  if (tolerance === "high") score += 5;
-
-
   const notes: string[] = [];
   notes.push(d.visa.label + ".");
   if (incomeGap < 1)
@@ -455,7 +433,7 @@ function scoreVisa(d: Destination, answers: Answers) {
       `The main retirement route typically requires age ${d.visa.minAge}+${hasNomadRoute ? ", but a digital nomad route is available" : ""}.`,
     );
 
-  const constrained = incomeGap < 0.7 && savings < 150000;
+  const constrained = incomeGap < 0.7;
   return { score: clamp(score), note: notes.join(" "), constrained };
 }
 
@@ -473,20 +451,16 @@ function scoreHealthcare(d: Destination, answers: Answers) {
 
 function scoreLifestyle(d: Destination, answers: Answers) {
   const setting = str(answers, "setting");
-  // Pace and housing are no longer asked — assume a balanced pace and an
-  // open mind on renting vs. buying.
-  const pace = str(answers, "pace") || "balanced";
-  const housing = str(answers, "housing") || "unsure";
   const priorities = list(answers, "priorities");
 
   const settingScore = d.settingFit[setting] ?? 60;
-  const paceScore = d.paceFit[pace] ?? 60;
-  const housingScore = d.housingFit[housing] ?? 70;
   const priorityScore = priorities.length
     ? priorities.reduce((sum, p) => sum + (d.priorityStrength[p] ?? 60), 0) / priorities.length
     : 70;
 
-  const score = settingScore * 0.35 + paceScore * 0.15 + housingScore * 0.1 + priorityScore * 0.4;
+  // Setting fit and priority strength keep their original 35:40 ratio, now
+  // carrying the full weight of the lifestyle factor.
+  const score = settingScore * (7 / 15) + priorityScore * (8 / 15);
   return {
     score: clamp(score),
     note: `Matches your preference for ${setting.replace("_", " ")} living and lines up with the priorities you selected.`,
@@ -538,17 +512,10 @@ function scoreProximity(d: Destination, answers: Answers) {
 }
 
 function scoreBureaucracy(d: Destination, answers: Answers) {
-  // Paperwork tolerance and tax sensitivity are no longer asked — assume a
-  // middling tolerance for admin and no strong tax preference.
-  const tolerance = str(answers, "bureaucracy") || "medium";
-  const taxSensitivity = str(answers, "tax") || "medium";
+  // Measures the destination's own admin burden and tax treatment of foreign
+  // retirees; there is no user-preference input here.
   const admin = 100 - (d.bureaucracy - 1) * 18;
-
-  const tolerated = tolerance === "high" ? 25 : tolerance === "medium" ? 12 : 0;
-  let score = clamp(admin + tolerated);
-  if (taxSensitivity === "high") score = clamp(score * 0.6 + (d.taxFriendliness / 5) * 100 * 0.4);
-  else if (taxSensitivity === "medium")
-    score = clamp(score * 0.8 + (d.taxFriendliness / 5) * 100 * 0.2);
+  const score = clamp(clamp(admin + 12) * 0.8 + (d.taxFriendliness / 5) * 100 * 0.2);
   return {
     score,
     note: `Administrative load rated ${d.bureaucracy}/5 and tax friendliness for foreign retirees rated ${d.taxFriendliness}/5.`,

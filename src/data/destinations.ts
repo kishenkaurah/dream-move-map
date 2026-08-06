@@ -2545,5 +2545,5 @@ export const FACTOR_LABELS: Record<FactorKey, string> = {
   climate: "Climate",
   language: "Language & integration",
   proximity: "Proximity to family",
-  bureaucracy: "Bureaucracy tolerance",
+  bureaucracy: "Bureaucracy & admin burden",
 };

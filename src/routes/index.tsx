@@ -42,7 +42,7 @@ const STEPS = [
   {
     icon: Compass,
     title: "Answer 14 short questions",
-    body: "Finances, healthcare, climate, language, family proximity and how much paperwork you can stomach.",
+    body: "Finances, healthcare, climate, language, family proximity and the lifestyle you want.",
   },
   {
     icon: Scale,
