@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -14,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Disclaimer } from "@/components/disclaimer";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { DESTINATIONS } from "@/data/destinations";
+import { loadAssessment } from "@/lib/assessment-storage";
 import heroImage from "@/assets/hero-coast.jpg";
 
 export const Route = createFileRoute("/")({
@@ -62,6 +64,12 @@ const TRUST = [
 ];
 
 function Landing() {
+  const [hasSavedResults, setHasSavedResults] = useState(false);
+
+  useEffect(() => {
+    setHasSavedResults(Boolean(loadAssessment().completedAt));
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader
@@ -93,9 +101,11 @@ function Landing() {
                     <ArrowRight aria-hidden="true" />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link to="/results">View my saved results</Link>
-                </Button>
+                {hasSavedResults && (
+                  <Button asChild size="lg" variant="outline">
+                    <Link to="/results">View my saved results</Link>
+                  </Button>
+                )}
               </div>
               <ul className="mt-8 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-x-6">
                 {TRUST.map(({ icon: Icon, label }) => (
