@@ -29,7 +29,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Answer 12 questions and see which overseas retirement destinations genuinely fit your budget, healthcare needs and lifestyle.",
+          "Answer a few short questions and see which overseas retirement destinations genuinely fit your budget, healthcare needs and lifestyle.",
       },
     ],
   }),
