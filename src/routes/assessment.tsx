@@ -6,7 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Disclaimer } from "@/components/disclaimer";
 import { SiteHeader } from "@/components/site-chrome";
-import { QUESTIONS, TOTAL_STEPS, type Answers } from "@/data/questions";
+import {
+  DEFAULT_ANSWERS,
+  QUESTIONS,
+  TOTAL_STEPS,
+  optionLabel,
+} from "@/data/questions";
+import { CURRENCY_NAMES, currencyForCitizenship } from "@/lib/currency";
 import {
   clearAssessment,
   loadAssessment,
@@ -23,7 +29,7 @@ export const Route = createFileRoute("/assessment")({
       {
         name: "description",
         content:
-          "Answer 12 questions about your finances, healthcare needs and lifestyle to see which overseas retirement destinations fit you best.",
+          "Answer a short set of questions about your finances, healthcare needs and lifestyle to see which overseas retirement destinations fit you best.",
       },
       { property: "og:title", content: "Retirement Destination Assessment" },
       {
@@ -38,12 +44,15 @@ export const Route = createFileRoute("/assessment")({
 function AssessmentPage() {
   const navigate = useNavigate();
   const [hydrated, setHydrated] = useState(false);
-  const [state, setState] = useState<AssessmentState>({ answers: {}, stepIndex: 0 });
+  const [state, setState] = useState<AssessmentState>({
+    answers: { ...DEFAULT_ANSWERS },
+    stepIndex: 0,
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loaded = loadAssessment();
-    setState(loaded);
+    setState({ ...loaded, answers: { ...DEFAULT_ANSWERS, ...loaded.answers } });
     setHydrated(true);
     track("assessment_started", { resumed: Object.keys(loaded.answers).length > 0 });
   }, []);
@@ -55,6 +64,11 @@ function AssessmentPage() {
   const index = Math.min(state.stepIndex, TOTAL_STEPS - 1);
   const question = QUESTIONS[index]!;
   const answer = state.answers[question.id];
+  const currency = currencyForCitizenship(
+    typeof state.answers["citizenship"] === "string"
+      ? (state.answers["citizenship"] as string)
+      : undefined,
+  );
   const progress = useMemo(() => (index / TOTAL_STEPS) * 100, [index]);
 
   function setAnswer(value: string | string[]) {
@@ -120,7 +134,7 @@ function AssessmentPage() {
 
   function restart() {
     clearAssessment();
-    setState({ answers: {}, stepIndex: 0 });
+    setState({ answers: { ...DEFAULT_ANSWERS }, stepIndex: 0 });
     setError(null);
   }
 
@@ -156,6 +170,11 @@ function AssessmentPage() {
             {question.help && (
               <p className="mt-2 text-sm text-muted-foreground">{question.help}</p>
             )}
+            {question.money && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Amounts shown in {CURRENCY_NAMES[currency]}.
+              </p>
+            )}
 
             <div
               role={question.type === "single" ? "radiogroup" : "group"}
@@ -184,7 +203,9 @@ function AssessmentPage() {
                     )}
                   >
                     <span className="min-w-0">
-                      <span className="block text-sm font-medium text-foreground">{opt.label}</span>
+                      <span className="block text-sm font-medium text-foreground">
+                        {optionLabel(opt, currency)}
+                      </span>
                       {opt.hint && (
                         <span className="mt-0.5 block text-xs text-muted-foreground">
                           {opt.hint}
