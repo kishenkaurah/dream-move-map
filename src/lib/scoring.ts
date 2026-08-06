@@ -305,6 +305,7 @@ export function computeWeights(answers: Answers): Record<FactorKey, number> {
 }
 
 function scoreAffordability(d: Destination, answers: Answers) {
+  const cur = displayCurrency(answers);
   const hh = household(answers);
   const couple = hh.partner;
   const income = INCOME_MIDPOINT[str(answers, "income")] ?? 2000;
@@ -506,6 +507,7 @@ function scoreBureaucracy(d: Destination, answers: Answers) {
 }
 
 export function scoreDestination(d: Destination, answers: Answers): DestinationResult {
+  const cur = displayCurrency(answers);
   const weights = computeWeights(answers);
   const hh = household(answers);
 
