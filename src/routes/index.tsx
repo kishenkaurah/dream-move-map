@@ -67,7 +67,7 @@ function Landing() {
   const [hasSavedResults, setHasSavedResults] = useState(false);
 
   useEffect(() => {
-    setHasSavedResults(Boolean(loadAssessment().completedAt));
+    setHasSavedResults(hasCompletedAssessment());
   }, []);
 
   return (
