@@ -144,7 +144,7 @@ export const template = {
   component: ResearchPlanEmail,
   displayName: 'Research Plan',
   subject: (data: Record<string, any>) =>
-    `Your Retire Abroad research plan — ${data.topDestination ?? 'your top matches'}`,
+    `Your Retire Abroad research plan — ${data['topDestination'] ?? 'your top matches'}`,
   previewData: {
     name: 'Alex',
     topDestination: 'Lisbon',
