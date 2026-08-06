@@ -22,6 +22,7 @@ import {
 } from "@/data/destinations";
 import type { Answers } from "@/data/questions";
 import { VISA_ROUTES, VISA_ROUTE_TYPE_LABEL } from "@/data/visa-routes";
+import { regionForCountry } from "@/data/regions";
 import { currencyForCitizenship, formatMoney, type CurrencyCode } from "@/lib/currency";
 
 /** Citizenship drives visa and residency pathway logic. */
@@ -647,6 +648,7 @@ export function scoreDestination(d: Destination, answers: Answers): DestinationR
     constraints,
     strengths,
     headline,
+    familiarityNote: familiarityNote(d, answers),
   };
 
 }
