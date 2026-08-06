@@ -112,18 +112,55 @@ export function household(answers: Answers): Household {
   };
 }
 
+/** Typical monthly household spend at home for a single person, in USD. */
+const HOME_TYPICAL_SOLO_SPEND = 2600;
+
+/** Where in the destination's typical range each lifestyle choice lands. */
+const SPEND_STYLE_POSITION: Record<string, number> = {
+  trim: 0.2,
+  same: 0.5,
+  upgrade: 0.82,
+};
+
 /**
- * Projects what the user would likely spend in a destination, based on what
- * they spend at home today, adjusted for local price levels and the lifestyle
- * they say they want. Returns null when they didn't give a usable figure.
+ * Projects what the user would likely spend in a destination.
+ *
+ * The projection is anchored to the destination's own typical range for the
+ * household type: "keep a similar lifestyle" lands mid-range, trimming lands
+ * lower, upgrading lands higher, nudged by how their current spending at home
+ * compares with what is typical for their home region. The result is always
+ * clamped inside the destination's stated range and rounded to the nearest $50,
+ * so it can never contradict the range shown alongside it.
  */
 export function projectSpend(d: Destination, answers: Answers): number | null {
   const spend = SPEND_MIDPOINT[str(answers, "current_spend")];
   if (!spend) return null;
+
+  const hh = household(answers);
+  const base = hh.partner ? d.budget.couple : d.budget.solo;
+  const low = base[0] * hh.multiplier;
+  const high = base[1] * hh.multiplier;
+
   const homeIndex = HOME_COST_INDEX[residenceOf(answers)] ?? 100;
-  const style = SPEND_STYLE_FACTOR[str(answers, "spend_style")] ?? 1;
-  return Math.round(((spend * (d.costIndex / homeIndex) * style) / 50) * 50);
+  const typicalHome =
+    HOME_TYPICAL_SOLO_SPEND * (homeIndex / 100) * (hh.partner ? 1.35 : 1) * hh.multiplier;
+
+  // How their spending at home compares with a typical household like theirs.
+  const habitRatio = spend / typicalHome;
+  const habitShift = clampNum((habitRatio - 1) * 0.35, -0.25, 0.25);
+
+  const position = clampNum(
+    (SPEND_STYLE_POSITION[str(answers, "spend_style")] ?? 0.5) + habitShift,
+    0.05,
+    0.95,
+  );
+
+  const projected = low + position * (high - low);
+  return Math.round(clampNum(projected, low, high) / 50) * 50;
 }
+
+const clampNum = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+
 
 
 /** Rough share of a monthly budget by category, used for the spend breakdown. */
