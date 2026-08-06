@@ -49,12 +49,20 @@ export const ResearchPlanEmail = ({
   siteUrl,
 }: ResearchPlanEmailProps) => {
   const topMatch = matches[0]
-  const spendText =
-    typeof projectedSpend === 'number' && projectedSpend > 0
-      ? `Based on your answers, we project your monthly spend in ${topDestination} at about **$${projectedSpend.toLocaleString('en-US')}**.`
-      : topMatch
-        ? `Typical monthly budgets in ${topDestination} range from **$${topMatch.budgetLow.toLocaleString('en-US')}** to **$${topMatch.budgetHigh.toLocaleString('en-US')}**.`
-        : null
+  const projectedSpendText =
+    typeof projectedSpend === 'number' && projectedSpend > 0 ? (
+      <Text style={text}>
+        Based on your answers, we project your monthly spend in {topDestination} at about{' '}
+        <strong>${projectedSpend.toLocaleString('en-US')}</strong>.
+      </Text>
+    ) : topMatch ? (
+      <Text style={text}>
+        Typical monthly budgets in {topDestination} range from{' '}
+        <strong>${topMatch.budgetLow.toLocaleString('en-US')}</strong> to{' '}
+        <strong>${topMatch.budgetHigh.toLocaleString('en-US')}</strong>.
+      </Text>
+    ) : null
+
 
   return (
     <Html lang="en" dir="ltr">
