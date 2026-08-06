@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssessmentRouteImport } from './routes/assessment'
 import { Route as ResultsRouteImport } from './routes/results'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiPublicLeadsRouteImport } from './routes/api/public/leads'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const ResultsRoute = ResultsRouteImport.update({
   path: '/results',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLeadsRoute = ApiPublicLeadsRouteImport.update({
   id: '/api/public/leads',
   path: '/api/public/leads',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,29 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/assessment' | '/results' | '/api/public/leads'
+  fullPaths:
+    '/' | '/assessment' | '/results' | '/sitemap.xml' | '/api/public/leads'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/assessment' | '/results' | '/api/public/leads'
-  id: '__root__' | '/' | '/assessment' | '/results' | '/api/public/leads'
+  to: '/' | '/assessment' | '/results' | '/sitemap.xml' | '/api/public/leads'
+  id:
+    | '__root__'
+    | '/'
+    | '/assessment'
+    | '/results'
+    | '/sitemap.xml'
+    | '/api/public/leads'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssessmentRoute: typeof AssessmentRoute
   ResultsRoute: typeof ResultsRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicLeadsRoute: typeof ApiPublicLeadsRoute
 }
 
@@ -92,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/leads': {
       id: '/api/public/leads'
       path: '/api/public/leads'
@@ -106,6 +130,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssessmentRoute: AssessmentRoute,
   ResultsRoute: ResultsRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicLeadsRoute: ApiPublicLeadsRoute,
 }
 export const routeTree = rootRouteImport
