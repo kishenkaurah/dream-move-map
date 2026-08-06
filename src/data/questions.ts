@@ -212,16 +212,30 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: "priorities",
+    id: "prior_experience",
     step: 14,
-    title: "What matters most in your next chapter?",
-    help: "Choose up to three.",
+    title: "Have you spent much time in any of these regions?",
+    help: "Familiarity changes how big the adjustment feels — and how much research you still need.",
+    type: "multi",
+    minSelections: 1,
+    options: [
+      { id: "sea", label: "Southeast Asia" },
+      { id: "europe", label: "Europe & the Mediterranean" },
+      { id: "latam", label: "Latin America" },
+      { id: "some_travel", label: "I've travelled a little, but not to these regions" },
+      { id: "none", label: "I haven't travelled abroad much" },
+    ],
+  },
+  {
+    id: "priorities",
+    step: 15,
+    title: "If you could only protect three things, which would they be?",
+    help: "You've told us about your situation — this tells us what to weight most heavily. Choose up to three.",
     type: "multi",
     minSelections: 1,
     maxSelections: 3,
     options: [
       { id: "cost", label: "Stretching my money further" },
-      { id: "healthcare", label: "Healthcare confidence" },
       { id: "safety", label: "Safety and stability" },
       { id: "community", label: "An established community" },
       { id: "food_culture", label: "Food and culture" },
@@ -231,6 +245,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
 ];
+
 
 export const TOTAL_STEPS = QUESTIONS.length;
 

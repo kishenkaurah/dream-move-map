@@ -104,6 +104,12 @@ export function DestinationResultCard({
           )}
         </div>
 
+        {result.familiarityNote && (
+          <p className="rounded-lg border border-border bg-secondary/30 p-3 text-sm text-muted-foreground">
+            {result.familiarityNote}
+          </p>
+        )}
+
         <dl className="grid grid-cols-2 gap-3">
           <Stat label="Visa complexity" value={visaComplexityLabel(d.visa.complexity)} />
           <Stat

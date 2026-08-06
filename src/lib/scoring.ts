@@ -22,6 +22,7 @@ import {
 } from "@/data/destinations";
 import type { Answers } from "@/data/questions";
 import { VISA_ROUTES, VISA_ROUTE_TYPE_LABEL } from "@/data/visa-routes";
+import { regionForCountry } from "@/data/regions";
 import { currencyForCitizenship, formatMoney, type CurrencyCode } from "@/lib/currency";
 
 /** Citizenship drives visa and residency pathway logic. */
@@ -78,12 +79,8 @@ const HOME_COST_INDEX: Record<string, number> = {
   other: 70,
 };
 
-/** How the user wants their lifestyle to change once abroad. */
-const SPEND_STYLE_FACTOR: Record<string, number> = {
-  trim: 0.85,
-  same: 1,
-  upgrade: 1.2,
-};
+
+
 
 /** Household shape derived from the single "who is moving" answer. */
 export interface Household {
@@ -112,18 +109,55 @@ export function household(answers: Answers): Household {
   };
 }
 
+/** Typical monthly household spend at home for a single person, in USD. */
+const HOME_TYPICAL_SOLO_SPEND = 2600;
+
+/** Where in the destination's typical range each lifestyle choice lands. */
+const SPEND_STYLE_POSITION: Record<string, number> = {
+  trim: 0.2,
+  same: 0.5,
+  upgrade: 0.82,
+};
+
 /**
- * Projects what the user would likely spend in a destination, based on what
- * they spend at home today, adjusted for local price levels and the lifestyle
- * they say they want. Returns null when they didn't give a usable figure.
+ * Projects what the user would likely spend in a destination.
+ *
+ * The projection is anchored to the destination's own typical range for the
+ * household type: "keep a similar lifestyle" lands mid-range, trimming lands
+ * lower, upgrading lands higher, nudged by how their current spending at home
+ * compares with what is typical for their home region. The result is always
+ * clamped inside the destination's stated range and rounded to the nearest $50,
+ * so it can never contradict the range shown alongside it.
  */
 export function projectSpend(d: Destination, answers: Answers): number | null {
   const spend = SPEND_MIDPOINT[str(answers, "current_spend")];
   if (!spend) return null;
+
+  const hh = household(answers);
+  const base = hh.partner ? d.budget.couple : d.budget.solo;
+  const low = base[0] * hh.multiplier;
+  const high = base[1] * hh.multiplier;
+
   const homeIndex = HOME_COST_INDEX[residenceOf(answers)] ?? 100;
-  const style = SPEND_STYLE_FACTOR[str(answers, "spend_style")] ?? 1;
-  return Math.round(((spend * (d.costIndex / homeIndex) * style) / 50) * 50);
+  const typicalHome =
+    HOME_TYPICAL_SOLO_SPEND * (homeIndex / 100) * (hh.partner ? 1.35 : 1) * hh.multiplier;
+
+  // How their spending at home compares with a typical household like theirs.
+  const habitRatio = spend / typicalHome;
+  const habitShift = clampNum((habitRatio - 1) * 0.35, -0.25, 0.25);
+
+  const position = clampNum(
+    (SPEND_STYLE_POSITION[str(answers, "spend_style")] ?? 0.5) + habitShift,
+    0.05,
+    0.95,
+  );
+
+  const projected = low + position * (high - low);
+  return Math.round(clampNum(projected, low, high) / 50) * 50;
 }
+
+const clampNum = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+
 
 
 /** Rough share of a monthly budget by category, used for the spend breakdown. */
@@ -253,7 +287,24 @@ export interface DestinationResult {
   constraints: string[];
   strengths: string[];
   headline: string;
+  /** Note about how familiar this region already is to the user. Never scored. */
+  familiarityNote: string | null;
 }
+
+/**
+ * Turns the prior-experience answer into a research framing note. Display only:
+ * it never touches any factor score.
+ */
+export function familiarityNote(d: Destination, answers: Answers): string | null {
+  const seen = list(answers, "prior_experience");
+  if (!seen.length) return null;
+  const region = regionForCountry(d.country);
+  if (!region) return null;
+  return seen.includes(region)
+    ? "You already know this region — your research can focus on the practical details rather than first impressions."
+    : "Worth a scouting trip before committing — this would be a bigger adjustment.";
+}
+
 
 
 const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n));
@@ -292,7 +343,7 @@ export function computeWeights(answers: Answers): Record<FactorKey, number> {
 
   if (str(answers, "tax") === "high") w.affordability += 4;
   if (priorities.includes("cost")) w.affordability += 6;
-  if (priorities.includes("healthcare")) w.healthcare += 4;
+  // Healthcare weight is driven solely by the dedicated healthcare question.
   if (priorities.includes("easy_residency")) w.visa += 6;
   if (priorities.includes("travel_access")) w.proximity += 3;
   if (priorities.includes("nature") || priorities.includes("food_culture")) w.lifestyle += 4;
@@ -580,9 +631,10 @@ export function scoreDestination(d: Destination, answers: Answers): DestinationR
     : `${d.name} scores well on ${(strengths[0] ?? "overall fit").toLowerCase()} and ${(strengths[1] ?? "lifestyle").toLowerCase()} for the profile you described.`;
 
   const budgetRange: [number, number] = [
-    Math.round((aff.low / 50) * 50),
-    Math.round((aff.high / 50) * 50),
+    Math.floor(aff.low / 50) * 50,
+    Math.ceil(aff.high / 50) * 50,
   ];
+
 
   return {
     destination: d,
@@ -596,6 +648,7 @@ export function scoreDestination(d: Destination, answers: Answers): DestinationR
     constraints,
     strengths,
     headline,
+    familiarityNote: familiarityNote(d, answers),
   };
 
 }

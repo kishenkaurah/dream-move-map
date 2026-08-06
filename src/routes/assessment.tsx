@@ -69,7 +69,7 @@ function AssessmentPage() {
       ? (state.answers["citizenship"] as string)
       : undefined,
   );
-  const progress = useMemo(() => (index / TOTAL_STEPS) * 100, [index]);
+  const progress = useMemo(() => ((index + 1) / TOTAL_STEPS) * 100, [index]);
 
   function setAnswer(value: string | string[]) {
     setError(null);
