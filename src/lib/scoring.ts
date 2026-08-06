@@ -22,6 +22,29 @@ import {
 } from "@/data/destinations";
 import type { Answers } from "@/data/questions";
 import { VISA_ROUTES, VISA_ROUTE_TYPE_LABEL } from "@/data/visa-routes";
+import { currencyForCitizenship, formatMoney, type CurrencyCode } from "@/lib/currency";
+import { regionForCountry, regionFromAnswer } from "@/data/regions";
+
+/** Citizenship drives visa and residency pathway logic. */
+export function citizenshipOf(answers: Answers): HomeRegion {
+  const v = str(answers, "citizenship");
+  return (v || "other") as HomeRegion;
+}
+
+/** Current residence drives distance, flight times and cost-of-living baseline. */
+export function residenceOf(answers: Answers): HomeRegion {
+  const v = str(answers, "residence");
+  if (!v || v === "same") return citizenshipOf(answers);
+  return v as HomeRegion;
+}
+
+export function displayCurrency(answers: Answers): CurrencyCode {
+  return currencyForCitizenship(str(answers, "citizenship"));
+}
+
+/** Countries where an EU/EEA citizen has freedom of movement. */
+const EU_COUNTRIES = new Set(["Portugal", "Spain", "Greece"]);
+
 
 const INCOME_MIDPOINT: Record<string, number> = {
   under_1500: 1200,
