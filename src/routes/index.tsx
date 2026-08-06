@@ -64,6 +64,12 @@ const TRUST = [
 ];
 
 function Landing() {
+  const [hasSavedResults, setHasSavedResults] = useState(false);
+
+  useEffect(() => {
+    setHasSavedResults(Boolean(loadAssessment().completedAt));
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader
@@ -95,9 +101,11 @@ function Landing() {
                     <ArrowRight aria-hidden="true" />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link to="/results">View my saved results</Link>
-                </Button>
+                {hasSavedResults && (
+                  <Button asChild size="lg" variant="outline">
+                    <Link to="/results">View my saved results</Link>
+                  </Button>
+                )}
               </div>
               <ul className="mt-8 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-x-6">
                 {TRUST.map(({ icon: Icon, label }) => (
