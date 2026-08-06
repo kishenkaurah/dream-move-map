@@ -20,12 +20,14 @@ import type { ReportMatch } from "@/lib/lead-report";
 import { track } from "@/lib/analytics";
 
 const leadSchema = z.object({
+  name: z.string().trim().max(100, { message: "Name must be under 100 characters" }).optional(),
   email: z
     .string()
     .trim()
     .email({ message: "Please enter a valid email address" })
     .max(255, { message: "Email must be under 255 characters" }),
 });
+
 
 export function LeadCapture({
   matches,
