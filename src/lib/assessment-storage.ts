@@ -3,7 +3,7 @@
  * Replace these four functions with Lovable Cloud calls when a backend
  * is added — the rest of the app only uses this module's API.
  */
-import type { Answers } from "@/data/questions";
+import { QUESTIONS, type Answers } from "@/data/questions";
 
 const KEY = "ran.assessment.v1";
 
