@@ -137,8 +137,10 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
+    captureAcquisition();
     initGoogleAnalytics();
   }, []);
+
 
   useEffect(() => {
     trackPageView(pathname);
