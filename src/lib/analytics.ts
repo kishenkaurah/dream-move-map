@@ -160,11 +160,17 @@ export function trackPageView(path: string) {
 
 
 export function track(event: AnalyticsEvent, payload?: Record<string, unknown>) {
-  const entry: TrackedEvent = { event, payload, at: new Date().toISOString() };
-  // eslint-disable-next-line no-console
-  console.info("[analytics]", entry.event, payload ?? {});
+  if (typeof window === "undefined") {
+    // eslint-disable-next-line no-console
+    console.info("[analytics]", event, payload ?? {});
+    return;
+  }
 
-  if (typeof window === "undefined") return;
+  const fullPayload = { ...payload, ...acquisition() };
+  const entry: TrackedEvent = { event, payload: fullPayload, at: new Date().toISOString() };
+  // eslint-disable-next-line no-console
+  console.info("[analytics]", entry.event, fullPayload);
+
 
   // Local buffer for debugging
   try {
