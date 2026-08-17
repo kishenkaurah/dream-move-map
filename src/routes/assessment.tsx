@@ -21,7 +21,7 @@ import {
   saveAssessment,
   type AssessmentState,
 } from "@/lib/assessment-storage";
-import { track } from "@/lib/analytics";
+import { track, trackOnce } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/assessment")({
@@ -62,8 +62,21 @@ function AssessmentPage() {
       stepIndex: firstUnansweredStep(answers) ?? loaded.stepIndex,
     });
     setHydrated(true);
+    trackOnce("assessment_viewed", "assessment_viewed", { totalSteps: TOTAL_STEPS });
     track("assessment_started", { resumed: Object.keys(loaded.answers).length > 0 });
   }, []);
+
+  // Funnel checkpoints — once per step per browser session.
+  useEffect(() => {
+    if (!hydrated) return;
+    const step = Math.min(state.stepIndex, TOTAL_STEPS - 1) + 1;
+    if (step !== 5 && step !== 10 && step !== 15) return;
+    trackOnce(`assessment_progress_${step}`, "assessment_progress", {
+      step,
+      totalSteps: TOTAL_STEPS,
+    });
+  }, [hydrated, state.stepIndex]);
+
 
   useEffect(() => {
     if (hydrated) saveAssessment(state);

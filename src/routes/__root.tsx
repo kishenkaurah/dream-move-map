@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { initGoogleAnalytics, trackPageView } from "../lib/analytics";
+import { captureAcquisition, initGoogleAnalytics, trackPageView } from "../lib/analytics";
 import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
@@ -137,8 +137,10 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
+    captureAcquisition();
     initGoogleAnalytics();
   }, []);
+
 
   useEffect(() => {
     trackPageView(pathname);
