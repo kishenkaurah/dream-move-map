@@ -188,9 +188,10 @@ export function track(event: AnalyticsEvent, payload?: Record<string, unknown>) 
   if (!gtag) return;
 
   gtag("event", event, {
-    ...payload,
+    ...fullPayload,
     event_category: "engagement",
   });
+
 }
 
 export function getTrackedEvents(): TrackedEvent[] {
