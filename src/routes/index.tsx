@@ -282,11 +282,12 @@ function Landing() {
                   specific questions worth putting to a qualified adviser before you commit.
                 </p>
                 <Button asChild className="mt-6">
-                  <Link to="/assessment">
-                    Begin your assessment
+                  <Link to="/assessment" onClick={() => ctaClicked("honesty_section")}>
+                    Find my best destinations
                     <ArrowRight aria-hidden="true" />
                   </Link>
                 </Button>
+
               </div>
               <div className="space-y-4">
                 <Disclaimer />
