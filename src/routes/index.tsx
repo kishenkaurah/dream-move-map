@@ -6,8 +6,10 @@ import {
   Clock,
   Compass,
   HeartPulse,
+  ListOrdered,
   Scale,
   ShieldCheck,
+  SlidersHorizontal,
   Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,8 +17,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Disclaimer } from "@/components/disclaimer";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { DESTINATIONS } from "@/data/destinations";
+import { TOTAL_STEPS } from "@/data/questions";
 import { hasCompletedAssessment } from "@/lib/assessment-storage";
+import { track } from "@/lib/analytics";
 import heroImage from "@/assets/hero-coast.jpg";
+
+const CITY_COUNT = DESTINATIONS.length;
+const COUNTRY_COUNT = new Set(DESTINATIONS.map((d) => d.country)).size;
+
+function ctaClicked(placement: string, action: "start" | "resume" = "start") {
+  track("landing_cta_clicked", { placement, action });
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,7 +52,7 @@ export const Route = createFileRoute("/")({
 const STEPS = [
   {
     icon: Compass,
-    title: "Answer 14 short questions",
+    title: `Answer ${TOTAL_STEPS} short questions`,
     body: "Finances, healthcare, climate, language, family proximity and the lifestyle you want.",
   },
   {
@@ -56,12 +67,46 @@ const STEPS = [
   },
 ];
 
+const PREVIEW = [
+  {
+    icon: ListOrdered,
+    title: "Ranked city matches",
+    body: `Your shortlist from ${CITY_COUNT} cities, each with a fit percentage.`,
+    sample: [
+      { label: "Coastal city, Portugal", value: "88%" },
+      { label: "Northern city, Thailand", value: "84%" },
+      { label: "Highland town, Mexico", value: "79%" },
+    ],
+  },
+  {
+    icon: Wallet,
+    title: "Realistic monthly budgets",
+    body: "A typical local range plus what your own answers project you'd spend.",
+    sample: [
+      { label: "Typical range", value: "$1,700 – $2,600" },
+      { label: "Rent", value: "$750" },
+      { label: "Everything else", value: "$1,150" },
+    ],
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "Honest trade-off breakdown",
+    body: "Factor-by-factor scoring, including where a destination falls short for you.",
+    sample: [
+      { label: "Cost of living", value: "High fit" },
+      { label: "Healthcare access", value: "Medium fit" },
+      { label: "Visa & admin burden", value: "Low fit" },
+    ],
+  },
+];
+
 const TRUST = [
   { icon: Wallet, label: "No cost, no account" },
   { icon: ShieldCheck, label: "Email is optional" },
   { icon: Clock, label: "Under 10 minutes" },
   { icon: HeartPulse, label: "Constraints flagged honestly" },
 ];
+
 
 function Landing() {
   const [hasSavedResults, setHasSavedResults] = useState(false);
