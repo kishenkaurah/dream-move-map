@@ -20,6 +20,8 @@ import { toReportMatch } from "@/lib/lead-report";
 import { QUESTIONS } from "@/data/questions";
 import { REGION_LABELS, regionForCountry, regionFromAnswer } from "@/data/regions";
 import { displayCurrency } from "@/lib/scoring";
+import { trackOnce } from "@/lib/analytics";
+
 
 export const Route = createFileRoute("/results")({
   head: () => ({
