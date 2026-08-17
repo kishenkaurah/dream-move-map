@@ -87,6 +87,18 @@ function ResultsPage() {
   const top3 = useMemo(() => topMatches(results, 3), [results]);
   const rest = results.filter((r) => !top3.includes(r));
 
+  const topMatch = top3[0];
+  useEffect(() => {
+    if (!hydrated || !complete || !topMatch) return;
+    trackOnce("results_viewed", "results_viewed", {
+      topCity: topMatch.destination.name,
+      topCountry: topMatch.destination.country,
+      matchCount: results.length,
+      regionFilterActive: Boolean(regionPref),
+    });
+  }, [hydrated, complete, topMatch, results.length, regionPref]);
+
+
   function restart() {
     clearAssessment();
     void navigate({ to: "/assessment" });
