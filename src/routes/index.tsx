@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
-  Clock,
   Compass,
   HeartPulse,
   ListOrdered,
@@ -52,7 +51,7 @@ export const Route = createFileRoute("/")({
 const STEPS = [
   {
     icon: Compass,
-    title: `Answer ${TOTAL_STEPS} short questions`,
+    title: "Answer a short, friendly questionnaire",
     body: "Finances, healthcare, climate, language, family proximity and the lifestyle you want.",
   },
   {
@@ -102,9 +101,9 @@ const PREVIEW = [
 
 const TRUST = [
   { icon: Wallet, label: "No cost, no account" },
-  { icon: ShieldCheck, label: "Email is optional" },
-  { icon: Clock, label: "Under 10 minutes" },
-  { icon: HeartPulse, label: "Constraints flagged honestly" },
+  { icon: ShieldCheck, label: "No sponsored rankings" },
+  { icon: HeartPulse, label: "No email gate" },
+  { icon: Scale, label: "Transparent scoring — budget, healthcare, lifestyle & visa/admin" },
 ];
 
 
@@ -136,9 +135,10 @@ function Landing() {
                 Find out where you can afford to retire abroad.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-                A free assessment that compares {CITY_COUNT} cities across {COUNTRY_COUNT}{" "}
-                countries against your budget, healthcare needs and lifestyle — then explains the
-                trade-offs honestly, including where you'd be stretched too thin.
+                Compare {CITY_COUNT} cities across {COUNTRY_COUNT} countries against your budget,
+                healthcare needs and lifestyle — then get a personalised shortlist with estimated
+                monthly costs, realistic budget ranges and visa/admin complexity, including where
+                you'd be stretched too thin.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg">
@@ -155,8 +155,11 @@ function Landing() {
                   </Button>
                 )}
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">
-                Independent guidance. No sponsored rankings. No email gate.
+              <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+                See your top city matches, realistic monthly budget ranges and the key trade-offs.
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Free · No signup · Takes just a few minutes.
               </p>
               <ul className="mt-6 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-x-6">
                 {TRUST.map(({ icon: Icon, label }) => (
