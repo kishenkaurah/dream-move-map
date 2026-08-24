@@ -90,13 +90,16 @@ function ResultsPage() {
   const topMatch = top3[0];
   useEffect(() => {
     if (!hydrated || !complete || !topMatch) return;
-    trackOnce("results_viewed", "results_viewed", {
+    // Deduplicated per assessment attempt, so refreshes don't inflate counts.
+    if (alreadyRecorded("results_viewed")) return;
+    track("results_viewed", {
       topCity: topMatch.destination.name,
       topCountry: topMatch.destination.country,
       matchCount: results.length,
       regionFilterActive: Boolean(regionPref),
     });
   }, [hydrated, complete, topMatch, results.length, regionPref]);
+
 
 
   function restart() {
