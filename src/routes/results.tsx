@@ -20,7 +20,9 @@ import { toReportMatch } from "@/lib/lead-report";
 import { QUESTIONS } from "@/data/questions";
 import { REGION_LABELS, regionForCountry, regionFromAnswer } from "@/data/regions";
 import { displayCurrency } from "@/lib/scoring";
-import { trackOnce } from "@/lib/analytics";
+import { track } from "@/lib/analytics";
+import { alreadyRecorded } from "@/lib/analytics-session";
+
 
 
 export const Route = createFileRoute("/results")({
