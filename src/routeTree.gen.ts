@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssessmentRouteImport } from './routes/assessment'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ApiPublicBookingsRouteImport } from './routes/api/public/bookings'
 import { Route as ApiPublicLeadsRouteImport } from './routes/api/public/leads'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -36,6 +37,11 @@ const ResultsRoute = ResultsRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBookingsRoute = ApiPublicBookingsRouteImport.update({
+  id: '/api/public/bookings',
+  path: '/api/public/bookings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicLeadsRoute = ApiPublicLeadsRouteImport.update({
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/results'
     | '/sitemap.xml'
+    | '/api/public/bookings'
     | '/api/public/leads'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/results'
     | '/sitemap.xml'
+    | '/api/public/bookings'
     | '/api/public/leads'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/results'
     | '/sitemap.xml'
+    | '/api/public/bookings'
     | '/api/public/leads'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   AssessmentRoute: typeof AssessmentRoute
   ResultsRoute: typeof ResultsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicBookingsRoute: typeof ApiPublicBookingsRoute
   ApiPublicLeadsRoute: typeof ApiPublicLeadsRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -163,6 +176,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/bookings': {
+      id: '/api/public/bookings'
+      path: '/api/public/bookings'
+      fullPath: '/api/public/bookings'
+      preLoaderRoute: typeof ApiPublicBookingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/leads': {
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssessmentRoute: AssessmentRoute,
   ResultsRoute: ResultsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicBookingsRoute: ApiPublicBookingsRoute,
   ApiPublicLeadsRoute: ApiPublicLeadsRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
