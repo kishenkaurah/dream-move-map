@@ -7,6 +7,8 @@
  * provider is wired up.
  */
 
+import { recordEvent } from "./analytics-session";
+
 export type AnalyticsEvent =
   | "assessment_started"
   | "step_completed"
