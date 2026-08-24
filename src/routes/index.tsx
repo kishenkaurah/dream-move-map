@@ -102,9 +102,9 @@ const PREVIEW = [
 
 const TRUST = [
   { icon: Wallet, label: "No cost, no account" },
-  { icon: ShieldCheck, label: "Email is optional" },
-  { icon: Clock, label: "Under 10 minutes" },
-  { icon: HeartPulse, label: "Constraints flagged honestly" },
+  { icon: ShieldCheck, label: "No sponsored rankings" },
+  { icon: HeartPulse, label: "No email gate" },
+  { icon: Scale, label: "Transparent scoring — budget, healthcare, lifestyle & visa/admin" },
 ];
 
 
