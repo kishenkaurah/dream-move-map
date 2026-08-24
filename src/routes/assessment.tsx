@@ -63,8 +63,17 @@ function AssessmentPage() {
     });
     setHydrated(true);
     trackOnce("assessment_viewed", "assessment_viewed", { totalSteps: TOTAL_STEPS });
-    track("assessment_started", { resumed: Object.keys(loaded.answers).length > 0 });
   }, []);
+
+  /**
+   * Fires assessment_started at most once per attempt, only when the user
+   * actually interacts with the questionnaire (not on render/refresh/back).
+   */
+  function beginAssessment() {
+    if (alreadyRecorded("assessment_started")) return;
+    track("assessment_started", { totalSteps: TOTAL_STEPS });
+  }
+
 
   // Funnel checkpoints — once per step per browser session.
   useEffect(() => {
