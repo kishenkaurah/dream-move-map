@@ -171,6 +171,8 @@ export function track(event: AnalyticsEvent, payload?: Record<string, unknown>) 
   // eslint-disable-next-line no-console
   console.info("[analytics]", entry.event, fullPayload);
 
+  // Source of truth: first-party persistence in the backend.
+  void recordEvent(event, fullPayload);
 
   // Local buffer for debugging
   try {
@@ -193,6 +195,7 @@ export function track(event: AnalyticsEvent, payload?: Record<string, unknown>) 
   });
 
 }
+
 
 export function getTrackedEvents(): TrackedEvent[] {
   if (typeof window === "undefined") return [];
