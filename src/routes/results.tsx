@@ -20,7 +20,9 @@ import { toReportMatch } from "@/lib/lead-report";
 import { QUESTIONS } from "@/data/questions";
 import { REGION_LABELS, regionForCountry, regionFromAnswer } from "@/data/regions";
 import { displayCurrency } from "@/lib/scoring";
-import { trackOnce } from "@/lib/analytics";
+import { track } from "@/lib/analytics";
+import { alreadyRecorded } from "@/lib/analytics-session";
+
 
 
 export const Route = createFileRoute("/results")({
@@ -90,13 +92,16 @@ function ResultsPage() {
   const topMatch = top3[0];
   useEffect(() => {
     if (!hydrated || !complete || !topMatch) return;
-    trackOnce("results_viewed", "results_viewed", {
+    // Deduplicated per assessment attempt, so refreshes don't inflate counts.
+    if (alreadyRecorded("results_viewed")) return;
+    track("results_viewed", {
       topCity: topMatch.destination.name,
       topCountry: topMatch.destination.country,
       matchCount: results.length,
       regionFilterActive: Boolean(regionPref),
     });
   }, [hydrated, complete, topMatch, results.length, regionPref]);
+
 
 
   function restart() {

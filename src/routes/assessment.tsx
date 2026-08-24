@@ -22,6 +22,7 @@ import {
   type AssessmentState,
 } from "@/lib/assessment-storage";
 import { track, trackOnce } from "@/lib/analytics";
+import { alreadyRecorded, resetAssessmentAttempt } from "@/lib/analytics-session";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/assessment")({
@@ -63,8 +64,17 @@ function AssessmentPage() {
     });
     setHydrated(true);
     trackOnce("assessment_viewed", "assessment_viewed", { totalSteps: TOTAL_STEPS });
-    track("assessment_started", { resumed: Object.keys(loaded.answers).length > 0 });
   }, []);
+
+  /**
+   * Fires assessment_started at most once per attempt, only when the user
+   * actually interacts with the questionnaire (not on render/refresh/back).
+   */
+  function beginAssessment() {
+    if (alreadyRecorded("assessment_started")) return;
+    track("assessment_started", { totalSteps: TOTAL_STEPS });
+  }
+
 
   // Funnel checkpoints — once per step per browser session.
   useEffect(() => {
@@ -93,6 +103,7 @@ function AssessmentPage() {
   const progress = useMemo(() => ((index + 1) / TOTAL_STEPS) * 100, [index]);
 
   function setAnswer(value: string | string[]) {
+    beginAssessment();
     setError(null);
     setState((s) => ({ ...s, answers: { ...s.answers, [question.id]: value } }));
   }
@@ -127,6 +138,7 @@ function AssessmentPage() {
 
   function next() {
     if (!validate()) return;
+    beginAssessment();
     track("step_completed", { step: index + 1, questionId: question.id });
     if (index === TOTAL_STEPS - 1) {
       const completed = {
@@ -136,7 +148,11 @@ function AssessmentPage() {
       };
       setState(completed);
       saveAssessment(completed);
-      track("assessment_completed", { answered: Object.keys(completed.answers).length });
+      // Deduplicated per attempt in the backend, so re-completing a stored
+      // assessment cannot double-count.
+      if (!alreadyRecorded("assessment_completed")) {
+        track("assessment_completed", { answered: Object.keys(completed.answers).length });
+      }
       void navigate({ to: "/results" });
       return;
     }
@@ -155,6 +171,8 @@ function AssessmentPage() {
 
   function restart() {
     clearAssessment();
+    // A restart is a brand new attempt: new id, fresh dedupe scope.
+    resetAssessmentAttempt();
     setState({
       version: ASSESSMENT_VERSION,
       answers: { ...DEFAULT_ANSWERS },
