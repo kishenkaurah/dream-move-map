@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
-  Clock,
   Compass,
   HeartPulse,
   ListOrdered,
