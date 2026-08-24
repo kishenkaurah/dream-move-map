@@ -156,8 +156,11 @@ function Landing() {
                   </Button>
                 )}
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">
-                Independent guidance. No sponsored rankings. No email gate.
+              <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+                See your top city matches, realistic monthly budget ranges and the key trade-offs.
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Free · No signup · Takes just a few minutes.
               </p>
               <ul className="mt-6 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-x-6">
                 {TRUST.map(({ icon: Icon, label }) => (
