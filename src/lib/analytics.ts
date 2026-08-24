@@ -20,7 +20,12 @@ export type AnalyticsEvent =
   | "landing_cta_clicked"
   | "assessment_viewed"
   | "assessment_progress"
-  | "results_viewed";
+  | "results_viewed"
+  | "thailand_call_viewed"
+  | "thailand_call_cta_clicked"
+  | "checkout_started"
+  | "booking_interest_submitted"
+  | "booking_confirmed";
 
 export interface TrackedEvent {
   event: AnalyticsEvent;

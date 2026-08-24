@@ -16,6 +16,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiPublicBookingsRouteImport } from './routes/api/public/bookings'
 import { Route as ApiPublicLeadsRouteImport } from './routes/api/public/leads'
 import { Route as ApiPublicOfferCheckoutRouteImport } from './routes/api/public/offer-checkout'
+import { Route as ApiPublicOfferCheckoutConfirmRouteImport } from './routes/api/public/offer-checkout.confirm'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -55,6 +56,12 @@ const ApiPublicOfferCheckoutRoute = ApiPublicOfferCheckoutRouteImport.update({
   path: '/api/public/offer-checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOfferCheckoutConfirmRoute =
+  ApiPublicOfferCheckoutConfirmRouteImport.update({
+    id: '/confirm',
+    path: '/confirm',
+    getParentRoute: () => ApiPublicOfferCheckoutRoute,
+  } as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -79,7 +86,8 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
-  '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRoute
+  '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
+  '/api/public/offer-checkout/confirm': typeof ApiPublicOfferCheckoutConfirmRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -91,7 +99,8 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
-  '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRoute
+  '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
+  '/api/public/offer-checkout/confirm': typeof ApiPublicOfferCheckoutConfirmRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -104,7 +113,8 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
-  '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRoute
+  '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
+  '/api/public/offer-checkout/confirm': typeof ApiPublicOfferCheckoutConfirmRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/api/public/bookings'
     | '/api/public/leads'
     | '/api/public/offer-checkout'
+    | '/api/public/offer-checkout/confirm'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/api/public/bookings'
     | '/api/public/leads'
     | '/api/public/offer-checkout'
+    | '/api/public/offer-checkout/confirm'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -143,6 +155,7 @@ export interface FileRouteTypes {
     | '/api/public/bookings'
     | '/api/public/leads'
     | '/api/public/offer-checkout'
+    | '/api/public/offer-checkout/confirm'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -155,7 +168,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicBookingsRoute: typeof ApiPublicBookingsRoute
   ApiPublicLeadsRoute: typeof ApiPublicLeadsRoute
-  ApiPublicOfferCheckoutRoute: typeof ApiPublicOfferCheckoutRoute
+  ApiPublicOfferCheckoutRoute: typeof ApiPublicOfferCheckoutRouteWithChildren
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicOfferCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/offer-checkout/confirm': {
+      id: '/api/public/offer-checkout/confirm'
+      path: '/confirm'
+      fullPath: '/api/public/offer-checkout/confirm'
+      preLoaderRoute: typeof ApiPublicOfferCheckoutConfirmRouteImport
+      parentRoute: typeof ApiPublicOfferCheckoutRoute
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -236,6 +256,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ApiPublicOfferCheckoutRouteChildren {
+  ApiPublicOfferCheckoutConfirmRoute: typeof ApiPublicOfferCheckoutConfirmRoute
+}
+
+const ApiPublicOfferCheckoutRouteChildren: ApiPublicOfferCheckoutRouteChildren =
+  {
+    ApiPublicOfferCheckoutConfirmRoute: ApiPublicOfferCheckoutConfirmRoute,
+  }
+
+const ApiPublicOfferCheckoutRouteWithChildren =
+  ApiPublicOfferCheckoutRoute._addFileChildren(
+    ApiPublicOfferCheckoutRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssessmentRoute: AssessmentRoute,
@@ -243,7 +277,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicBookingsRoute: ApiPublicBookingsRoute,
   ApiPublicLeadsRoute: ApiPublicLeadsRoute,
-  ApiPublicOfferCheckoutRoute: ApiPublicOfferCheckoutRoute,
+  ApiPublicOfferCheckoutRoute: ApiPublicOfferCheckoutRouteWithChildren,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
