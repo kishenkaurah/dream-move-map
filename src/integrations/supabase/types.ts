@@ -47,6 +47,75 @@ export type Database = {
         }
         Relationships: []
       }
+      consultation_bookings: {
+        Row: {
+          anonymous_session_id: string | null
+          country: string
+          created_at: string
+          currency: string
+          duration_minutes: number
+          email: string
+          help_with: string | null
+          id: string
+          name: string
+          offer_slug: string
+          preferred_times: string
+          price_cents: number
+          provider_name: string
+          provider_slug: string
+          revenue_share_pct: number
+          status: string
+          stripe_payment_status: string | null
+          stripe_session_id: string | null
+          timezone: string
+          user_agent: string | null
+        }
+        Insert: {
+          anonymous_session_id?: string | null
+          country: string
+          created_at?: string
+          currency?: string
+          duration_minutes: number
+          email: string
+          help_with?: string | null
+          id?: string
+          name: string
+          offer_slug: string
+          preferred_times: string
+          price_cents: number
+          provider_name: string
+          provider_slug: string
+          revenue_share_pct?: number
+          status?: string
+          stripe_payment_status?: string | null
+          stripe_session_id?: string | null
+          timezone: string
+          user_agent?: string | null
+        }
+        Update: {
+          anonymous_session_id?: string | null
+          country?: string
+          created_at?: string
+          currency?: string
+          duration_minutes?: number
+          email?: string
+          help_with?: string | null
+          id?: string
+          name?: string
+          offer_slug?: string
+          preferred_times?: string
+          price_cents?: number
+          provider_name?: string
+          provider_slug?: string
+          revenue_share_pct?: number
+          status?: string
+          stripe_payment_status?: string | null
+          stripe_session_id?: string | null
+          timezone?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           answers: Json
