@@ -13,7 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssessmentRouteImport } from './routes/assessment'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ApiPublicBookingsRouteImport } from './routes/api/public/bookings'
 import { Route as ApiPublicLeadsRouteImport } from './routes/api/public/leads'
+import { Route as ApiPublicOfferCheckoutRouteImport } from './routes/api/public/offer-checkout'
+import { Route as ApiPublicOfferCheckoutConfirmRouteImport } from './routes/api/public/offer-checkout.confirm'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -38,11 +41,27 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBookingsRoute = ApiPublicBookingsRouteImport.update({
+  id: '/api/public/bookings',
+  path: '/api/public/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLeadsRoute = ApiPublicLeadsRouteImport.update({
   id: '/api/public/leads',
   path: '/api/public/leads',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOfferCheckoutRoute = ApiPublicOfferCheckoutRouteImport.update({
+  id: '/api/public/offer-checkout',
+  path: '/api/public/offer-checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOfferCheckoutConfirmRoute =
+  ApiPublicOfferCheckoutConfirmRouteImport.update({
+    id: '/confirm',
+    path: '/confirm',
+    getParentRoute: () => ApiPublicOfferCheckoutRoute,
+  } as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -65,7 +84,10 @@ export interface FileRoutesByFullPath {
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
+  '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
+  '/api/public/offer-checkout/confirm': typeof ApiPublicOfferCheckoutConfirmRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -75,7 +97,10 @@ export interface FileRoutesByTo {
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
+  '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
+  '/api/public/offer-checkout/confirm': typeof ApiPublicOfferCheckoutConfirmRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -86,7 +111,10 @@ export interface FileRoutesById {
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
+  '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
+  '/api/public/offer-checkout/confirm': typeof ApiPublicOfferCheckoutConfirmRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -98,7 +126,10 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/results'
     | '/sitemap.xml'
+    | '/api/public/bookings'
     | '/api/public/leads'
+    | '/api/public/offer-checkout'
+    | '/api/public/offer-checkout/confirm'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -108,7 +139,10 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/results'
     | '/sitemap.xml'
+    | '/api/public/bookings'
     | '/api/public/leads'
+    | '/api/public/offer-checkout'
+    | '/api/public/offer-checkout/confirm'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -118,7 +152,10 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/results'
     | '/sitemap.xml'
+    | '/api/public/bookings'
     | '/api/public/leads'
+    | '/api/public/offer-checkout'
+    | '/api/public/offer-checkout/confirm'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -129,7 +166,9 @@ export interface RootRouteChildren {
   AssessmentRoute: typeof AssessmentRoute
   ResultsRoute: typeof ResultsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicBookingsRoute: typeof ApiPublicBookingsRoute
   ApiPublicLeadsRoute: typeof ApiPublicLeadsRoute
+  ApiPublicOfferCheckoutRoute: typeof ApiPublicOfferCheckoutRouteWithChildren
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -165,12 +204,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bookings': {
+      id: '/api/public/bookings'
+      path: '/api/public/bookings'
+      fullPath: '/api/public/bookings'
+      preLoaderRoute: typeof ApiPublicBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/leads': {
       id: '/api/public/leads'
       path: '/api/public/leads'
       fullPath: '/api/public/leads'
       preLoaderRoute: typeof ApiPublicLeadsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/public/offer-checkout': {
+      id: '/api/public/offer-checkout'
+      path: '/api/public/offer-checkout'
+      fullPath: '/api/public/offer-checkout'
+      preLoaderRoute: typeof ApiPublicOfferCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/offer-checkout/confirm': {
+      id: '/api/public/offer-checkout/confirm'
+      path: '/confirm'
+      fullPath: '/api/public/offer-checkout/confirm'
+      preLoaderRoute: typeof ApiPublicOfferCheckoutConfirmRouteImport
+      parentRoute: typeof ApiPublicOfferCheckoutRoute
     }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
@@ -196,12 +256,28 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ApiPublicOfferCheckoutRouteChildren {
+  ApiPublicOfferCheckoutConfirmRoute: typeof ApiPublicOfferCheckoutConfirmRoute
+}
+
+const ApiPublicOfferCheckoutRouteChildren: ApiPublicOfferCheckoutRouteChildren =
+  {
+    ApiPublicOfferCheckoutConfirmRoute: ApiPublicOfferCheckoutConfirmRoute,
+  }
+
+const ApiPublicOfferCheckoutRouteWithChildren =
+  ApiPublicOfferCheckoutRoute._addFileChildren(
+    ApiPublicOfferCheckoutRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssessmentRoute: AssessmentRoute,
   ResultsRoute: ResultsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicBookingsRoute: ApiPublicBookingsRoute,
   ApiPublicLeadsRoute: ApiPublicLeadsRoute,
+  ApiPublicOfferCheckoutRoute: ApiPublicOfferCheckoutRouteWithChildren,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
