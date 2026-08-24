@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          anonymous_session_id: string
+          assessment_attempt_id: string | null
+          created_at: string
+          dedupe_key: string | null
+          event_name: string
+          id: string
+          metadata: Json
+          page: string | null
+        }
+        Insert: {
+          anonymous_session_id: string
+          assessment_attempt_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          event_name: string
+          id?: string
+          metadata?: Json
+          page?: string | null
+        }
+        Update: {
+          anonymous_session_id?: string
+          assessment_attempt_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          event_name?: string
+          id?: string
+          metadata?: Json
+          page?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           answers: Json
