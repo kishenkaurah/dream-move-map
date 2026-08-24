@@ -136,9 +136,10 @@ function Landing() {
                 Find out where you can afford to retire abroad.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-                A free assessment that compares {CITY_COUNT} cities across {COUNTRY_COUNT}{" "}
-                countries against your budget, healthcare needs and lifestyle — then explains the
-                trade-offs honestly, including where you'd be stretched too thin.
+                Compare {CITY_COUNT} cities across {COUNTRY_COUNT} countries against your budget,
+                healthcare needs and lifestyle — then get a personalised shortlist with estimated
+                monthly costs, realistic budget ranges and visa/admin complexity, including where
+                you'd be stretched too thin.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg">
