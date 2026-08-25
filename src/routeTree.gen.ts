@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssessmentRouteImport } from './routes/assessment'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ThailandCallRouteImport } from './routes/thailand-call'
 import { Route as ApiPublicBookingsRouteImport } from './routes/api/public/bookings'
 import { Route as ApiPublicLeadsRouteImport } from './routes/api/public/leads'
 import { Route as ApiPublicOfferCheckoutRouteImport } from './routes/api/public/offer-checkout'
@@ -39,6 +40,11 @@ const ResultsRoute = ResultsRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ThailandCallRoute = ThailandCallRouteImport.update({
+  id: '/thailand-call',
+  path: '/thailand-call',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicBookingsRoute = ApiPublicBookingsRouteImport.update({
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/thailand-call': typeof ThailandCallRoute
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
   '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/thailand-call': typeof ThailandCallRoute
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
   '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/thailand-call': typeof ThailandCallRoute
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
   '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/results'
     | '/sitemap.xml'
+    | '/thailand-call'
     | '/api/public/bookings'
     | '/api/public/leads'
     | '/api/public/offer-checkout'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/results'
     | '/sitemap.xml'
+    | '/thailand-call'
     | '/api/public/bookings'
     | '/api/public/leads'
     | '/api/public/offer-checkout'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/results'
     | '/sitemap.xml'
+    | '/thailand-call'
     | '/api/public/bookings'
     | '/api/public/leads'
     | '/api/public/offer-checkout'
@@ -166,6 +178,7 @@ export interface RootRouteChildren {
   AssessmentRoute: typeof AssessmentRoute
   ResultsRoute: typeof ResultsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ThailandCallRoute: typeof ThailandCallRoute
   ApiPublicBookingsRoute: typeof ApiPublicBookingsRoute
   ApiPublicLeadsRoute: typeof ApiPublicLeadsRoute
   ApiPublicOfferCheckoutRoute: typeof ApiPublicOfferCheckoutRouteWithChildren
@@ -202,6 +215,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/thailand-call': {
+      id: '/thailand-call'
+      path: '/thailand-call'
+      fullPath: '/thailand-call'
+      preLoaderRoute: typeof ThailandCallRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/bookings': {
@@ -275,6 +295,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssessmentRoute: AssessmentRoute,
   ResultsRoute: ResultsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ThailandCallRoute: ThailandCallRoute,
   ApiPublicBookingsRoute: ApiPublicBookingsRoute,
   ApiPublicLeadsRoute: ApiPublicLeadsRoute,
   ApiPublicOfferCheckoutRoute: ApiPublicOfferCheckoutRouteWithChildren,
