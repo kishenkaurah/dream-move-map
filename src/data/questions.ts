@@ -51,7 +51,13 @@ const REGION_OPTIONS: QuestionOption[] = [
   { id: "other", label: "Somewhere else" },
 ];
 
-export const QUESTIONS: Question[] = [
+/**
+ * Every question the engine understands. Only the ids listed in
+ * ACTIVE_QUESTION_IDS are actually asked — the rest are answered from
+ * DEFAULT_ANSWERS so scoring keeps working unchanged.
+ */
+export const ALL_QUESTIONS: Question[] = [
+
   {
     id: "citizenship",
     step: 1,
