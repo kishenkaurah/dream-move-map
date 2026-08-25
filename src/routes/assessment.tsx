@@ -80,7 +80,7 @@ function AssessmentPage() {
   useEffect(() => {
     if (!hydrated) return;
     const step = Math.min(state.stepIndex, TOTAL_STEPS - 1) + 1;
-    if (step !== 5 && step !== 10 && step !== 15) return;
+    if (step !== 3 && step !== 6 && step !== 9) return;
     trackOnce(`assessment_progress_${step}`, "assessment_progress", {
       step,
       totalSteps: TOTAL_STEPS,
