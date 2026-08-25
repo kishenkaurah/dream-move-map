@@ -3,7 +3,7 @@ import { ArrowRight, PhoneCall } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatOfferPrice, type Offer } from "@/data/offers";
-import { track } from "@/lib/analytics";
+import { track, type AnalyticsEvent } from "@/lib/analytics";
 
 /**
  * Compact promotion for a paid planning call. Used on the results page (only
@@ -13,10 +13,14 @@ export function OfferCtaCard({
   offer,
   placement,
   note,
+  event = "thailand_call_cta_clicked",
+  ctaLabel = "See what the call covers",
 }: {
   offer: Offer;
   placement: string;
   note?: string;
+  event?: AnalyticsEvent;
+  ctaLabel?: string;
 }) {
   return (
     <Card className="border-primary/30 bg-primary/5 shadow-[var(--shadow-card)]">
@@ -33,11 +37,11 @@ export function OfferCtaCard({
             <Link
               to={offer.path}
               onClick={() =>
-                track("thailand_call_cta_clicked", { placement, offerSlug: offer.slug })
+                track(event, { placement, offerSlug: offer.slug, country: offer.country })
               }
             >
               <PhoneCall aria-hidden="true" />
-              See what the call covers
+              {ctaLabel}
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>

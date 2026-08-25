@@ -51,7 +51,13 @@ const REGION_OPTIONS: QuestionOption[] = [
   { id: "other", label: "Somewhere else" },
 ];
 
-export const QUESTIONS: Question[] = [
+/**
+ * Every question the engine understands. Only the ids listed in
+ * ACTIVE_QUESTION_IDS are actually asked — the rest are answered from
+ * DEFAULT_ANSWERS so scoring keeps working unchanged.
+ */
+export const ALL_QUESTIONS: Question[] = [
+
   {
     id: "citizenship",
     step: 1,
@@ -246,13 +252,37 @@ export const QUESTIONS: Question[] = [
   },
 ];
 
+/** The 9-question quick match, in the order they're asked. */
+export const ACTIVE_QUESTION_IDS = [
+  "citizenship",
+  "age",
+  "household",
+  "income",
+  "climate",
+  "setting",
+  "healthcare_importance",
+  "english",
+  "priorities",
+] as const;
+
+export const QUESTIONS: Question[] = ACTIVE_QUESTION_IDS.map(
+  (id, i) => ({ ...ALL_QUESTIONS.find((q) => q.id === id)!, step: i + 1 }),
+);
 
 export const TOTAL_STEPS = QUESTIONS.length;
 
 export type Answers = Record<string, string | string[] | undefined>;
 
-/** Defaults applied when a question hasn't been answered yet. */
+/**
+ * Applied for every question that is no longer asked, plus the two that were
+ * always implicit. These keep the scoring engine's inputs complete.
+ */
 export const DEFAULT_ANSWERS: Answers = {
   residence: "same",
   region_pref: "any",
+  current_spend: "unsure",
+  spend_style: "same",
+  family_proximity: "somewhat",
+  prior_experience: ["some_travel"],
 };
+

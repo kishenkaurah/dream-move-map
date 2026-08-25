@@ -25,7 +25,10 @@ export type AnalyticsEvent =
   | "thailand_call_cta_clicked"
   | "checkout_started"
   | "booking_interest_submitted"
-  | "booking_confirmed";
+  | "booking_confirmed"
+  | "expert_request_viewed"
+  | "expert_request_started"
+  | "expert_request_submitted";
 
 export interface TrackedEvent {
   event: AnalyticsEvent;

@@ -3,10 +3,10 @@
  * Replace these four functions with Lovable Cloud calls when a backend
  * is added — the rest of the app only uses this module's API.
  */
-import { QUESTIONS, type Answers } from "@/data/questions";
+import { ALL_QUESTIONS, DEFAULT_ANSWERS, QUESTIONS, type Answers } from "@/data/questions";
 
 const KEY = "ran.assessment.v1";
-export const ASSESSMENT_VERSION = 2;
+export const ASSESSMENT_VERSION = 3;
 
 export interface AssessmentState {
   version: number;
@@ -16,11 +16,11 @@ export interface AssessmentState {
 }
 
 function emptyAssessment(): AssessmentState {
-  return { version: ASSESSMENT_VERSION, answers: {}, stepIndex: 0 };
+  return { version: ASSESSMENT_VERSION, answers: { ...DEFAULT_ANSWERS }, stepIndex: 0 };
 }
 
 export function isQuestionAnswered(questionId: string, answers: Answers): boolean {
-  const question = QUESTIONS.find((candidate) => candidate.id === questionId);
+  const question = ALL_QUESTIONS.find((candidate) => candidate.id === questionId);
   if (!question) return false;
 
   const value = answers[question.id];
@@ -55,7 +55,7 @@ function sanitizeAnswers(value: unknown): Answers {
   const candidate = value as Record<string, unknown>;
   const answers: Answers = {};
 
-  for (const question of QUESTIONS) {
+  for (const question of ALL_QUESTIONS) {
     const answer = candidate[question.id];
     const possibleAnswers: Answers = { [question.id]: answer as string | string[] | undefined };
     if (isQuestionAnswered(question.id, possibleAnswers)) {
@@ -77,7 +77,7 @@ export function loadAssessment(): AssessmentState {
       return emptyAssessment();
     }
 
-    const answers = sanitizeAnswers(parsed.answers);
+    const answers = { ...DEFAULT_ANSWERS, ...sanitizeAnswers(parsed.answers) };
     const firstMissing = firstUnansweredStep(answers);
     const storedStep = Number.isInteger(parsed.stepIndex) ? Number(parsed.stepIndex) : 0;
     const stepIndex = firstMissing ?? Math.max(0, Math.min(storedStep, QUESTIONS.length - 1));
