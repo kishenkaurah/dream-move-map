@@ -57,7 +57,8 @@ export const Route = createFileRoute("/api/public/bookings")({
             currency: offer.currency,
             duration_minutes: offer.durationMinutes,
             revenue_share_pct: offer.provider.revenueSharePct,
-            status: "interest",
+            // No confirmed provider yet => we must match an expert before payment.
+            status: offer.provider.slug === "unassigned" ? "matching" : "interest",
             name,
             email: normalizedEmail,
             timezone,
