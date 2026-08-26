@@ -15,6 +15,7 @@ import { Route as ResultsRouteImport } from './routes/results'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ThailandCallRouteImport } from './routes/thailand-call'
 import { Route as ThailandCallIndexRouteImport } from './routes/thailand-call.index'
+import { Route as ThailandCallConfirmedRouteImport } from './routes/thailand-call.confirmed'
 import { Route as ApiPublicBookingsRouteImport } from './routes/api/public/bookings'
 import { Route as ApiPublicLeadsRouteImport } from './routes/api/public/leads'
 import { Route as ApiPublicOfferCheckoutRouteImport } from './routes/api/public/offer-checkout'
@@ -51,6 +52,11 @@ const ThailandCallRoute = ThailandCallRouteImport.update({
 const ThailandCallIndexRoute = ThailandCallIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => ThailandCallRoute,
+} as any)
+const ThailandCallConfirmedRoute = ThailandCallConfirmedRouteImport.update({
+  id: '/confirmed',
+  path: '/confirmed',
   getParentRoute: () => ThailandCallRoute,
 } as any)
 const ApiPublicBookingsRoute = ApiPublicBookingsRouteImport.update({
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/thailand-call': typeof ThailandCallRouteWithChildren
+  '/thailand-call/confirmed': typeof ThailandCallConfirmedRoute
   '/thailand-call/': typeof ThailandCallIndexRoute
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/assessment': typeof AssessmentRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/thailand-call/confirmed': typeof ThailandCallConfirmedRoute
   '/thailand-call': typeof ThailandCallIndexRoute
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/thailand-call': typeof ThailandCallRouteWithChildren
+  '/thailand-call/confirmed': typeof ThailandCallConfirmedRoute
   '/thailand-call/': typeof ThailandCallIndexRoute
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/sitemap.xml'
     | '/thailand-call'
+    | '/thailand-call/confirmed'
     | '/thailand-call/'
     | '/api/public/bookings'
     | '/api/public/leads'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/results'
     | '/sitemap.xml'
+    | '/thailand-call/confirmed'
     | '/thailand-call'
     | '/api/public/bookings'
     | '/api/public/leads'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/sitemap.xml'
     | '/thailand-call'
+    | '/thailand-call/confirmed'
     | '/thailand-call/'
     | '/api/public/bookings'
     | '/api/public/leads'
@@ -241,6 +253,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThailandCallIndexRouteImport
       parentRoute: typeof ThailandCallRoute
     }
+    '/thailand-call/confirmed': {
+      id: '/thailand-call/confirmed'
+      path: '/confirmed'
+      fullPath: '/thailand-call/confirmed'
+      preLoaderRoute: typeof ThailandCallConfirmedRouteImport
+      parentRoute: typeof ThailandCallRoute
+    }
     '/api/public/bookings': {
       id: '/api/public/bookings'
       path: '/api/public/bookings'
@@ -294,10 +313,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface ThailandCallRouteChildren {
+  ThailandCallConfirmedRoute: typeof ThailandCallConfirmedRoute
   ThailandCallIndexRoute: typeof ThailandCallIndexRoute
 }
 
 const ThailandCallRouteChildren: ThailandCallRouteChildren = {
+  ThailandCallConfirmedRoute: ThailandCallConfirmedRoute,
   ThailandCallIndexRoute: ThailandCallIndexRoute,
 }
 
