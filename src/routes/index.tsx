@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Disclaimer } from "@/components/disclaimer";
+import { OfferCtaCard } from "@/components/offer-cta-card";
+import { THAILAND_CALL } from "@/data/offers";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { DESTINATIONS } from "@/data/destinations";
 import { TOTAL_STEPS } from "@/data/questions";
