@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { bookingRequestSchema } from "@/lib/booking-schema";
-import { offerBySlug } from "@/data/offers";
+import { offerBySlug, formatOfferPrice } from "@/data/offers";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -72,6 +72,29 @@ export const Route = createFileRoute("/api/public/bookings")({
         if (error || !booking) {
           console.error("[bookings] insert failed", error);
           return json({ error: "We couldn't save your details. Please try again." }, 500);
+        }
+
+        // Owner alert. Requires the OWNER_NOTIFICATION_EMAIL secret; failures are
+        // logged only and never affect the saved booking.
+        try {
+          const { notifyOwnerOfBooking } = await import("@/lib/notify-owner.server");
+          await notifyOwnerOfBooking({
+            bookingId: booking.id,
+            isExpertRequest: offer.provider.slug === "unassigned",
+            country: offer.country,
+            offerName: offer.name,
+            offerSlug: offer.slug,
+            status: offer.provider.slug === "unassigned" ? "matching" : "interest",
+            providerName: offer.provider.name,
+            price: formatOfferPrice(offer),
+            name,
+            email: normalizedEmail,
+            timezone,
+            preferredTimes,
+            helpWith: helpWith ?? null,
+          });
+        } catch (notifyError) {
+          console.error("[bookings] owner notification failed", notifyError);
         }
 
         return json({ id: booking.id });
