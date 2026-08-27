@@ -245,6 +245,19 @@ function ResultsPage() {
           </Tabs>
 
           <div className="mt-10 space-y-6">
+            {contextualOffer && (
+              <OfferCtaCard
+                offer={contextualOffer.offer}
+                placement="results"
+                note={contextualOffer.note}
+                event={
+                  contextualOffer.confirmed ? "thailand_call_cta_clicked" : "consultation_clicked"
+                }
+                ctaLabel={
+                  contextualOffer.confirmed ? "See what the call covers" : "Request a local expert"
+                }
+              />
+            )}
             <LeadCapture
               matches={top3.map(toReportMatch)}
               {...(regionPref ? { regionPreference: regionPref } : {})}
