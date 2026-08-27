@@ -97,6 +97,29 @@ function ResultsPage() {
   const rest = results.filter((r) => !top3.includes(r));
 
   const topMatch = top3[0];
+
+  /** Only ever promoted when the country is genuinely in the shortlist. */
+  const contextualOffer = useMemo<
+    { offer: Offer; note: string; confirmed: boolean } | null
+  >(() => {
+    for (const r of top3) {
+      const config = expertCountryForCountry(r.destination.country);
+      if (!config) continue;
+      if (config.offerPath) {
+        return {
+          offer: THAILAND_CALL,
+          note: `${r.destination.name} is in your shortlist — this call goes deep on what living in ${config.country} actually costs and feels like.`,
+          confirmed: true,
+        };
+      }
+      return {
+        offer: expertOffer(config),
+        note: `${r.destination.name} is in your shortlist. Tell us what you'd want to ask and we'll find an experienced ${config.country} resident — nothing is charged unless we confirm someone suitable.`,
+        confirmed: false,
+      };
+    }
+    return null;
+  }, [top3]);
   useEffect(() => {
     if (!hydrated || !complete || !topMatch) return;
     // Deduplicated per assessment attempt, so refreshes don't inflate counts.
