@@ -9,6 +9,13 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { DestinationResultCard } from "@/components/destination-result-card";
 import { ComparisonTable } from "@/components/comparison-table";
 import { LeadCapture } from "@/components/lead-capture";
+import { OfferCtaCard } from "@/components/offer-cta-card";
+import {
+  THAILAND_CALL,
+  expertCountryForCountry,
+  expertOffer,
+  type Offer,
+} from "@/data/offers";
 import {
   clearAssessment,
   loadAssessment,
