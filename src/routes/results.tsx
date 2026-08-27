@@ -9,6 +9,13 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { DestinationResultCard } from "@/components/destination-result-card";
 import { ComparisonTable } from "@/components/comparison-table";
 import { LeadCapture } from "@/components/lead-capture";
+import { OfferCtaCard } from "@/components/offer-cta-card";
+import {
+  THAILAND_CALL,
+  expertCountryForCountry,
+  expertOffer,
+  type Offer,
+} from "@/data/offers";
 import {
   clearAssessment,
   loadAssessment,
@@ -90,6 +97,29 @@ function ResultsPage() {
   const rest = results.filter((r) => !top3.includes(r));
 
   const topMatch = top3[0];
+
+  /** Only ever promoted when the country is genuinely in the shortlist. */
+  const contextualOffer = useMemo<
+    { offer: Offer; note: string; confirmed: boolean } | null
+  >(() => {
+    for (const r of top3) {
+      const config = expertCountryForCountry(r.destination.country);
+      if (!config) continue;
+      if (config.offerPath) {
+        return {
+          offer: THAILAND_CALL,
+          note: `${r.destination.name} is in your shortlist — this call goes deep on what living in ${config.country} actually costs and feels like.`,
+          confirmed: true,
+        };
+      }
+      return {
+        offer: expertOffer(config),
+        note: `${r.destination.name} is in your shortlist. Tell us what you'd want to ask and we'll find an experienced ${config.country} resident — nothing is charged unless we confirm someone suitable.`,
+        confirmed: false,
+      };
+    }
+    return null;
+  }, [top3]);
   useEffect(() => {
     if (!hydrated || !complete || !topMatch) return;
     // Deduplicated per assessment attempt, so refreshes don't inflate counts.
@@ -215,6 +245,19 @@ function ResultsPage() {
           </Tabs>
 
           <div className="mt-10 space-y-6">
+            {contextualOffer && (
+              <OfferCtaCard
+                offer={contextualOffer.offer}
+                placement="results"
+                note={contextualOffer.note}
+                event={
+                  contextualOffer.confirmed ? "thailand_call_cta_clicked" : "consultation_clicked"
+                }
+                ctaLabel={
+                  contextualOffer.confirmed ? "See what the call covers" : "Request a local expert"
+                }
+              />
+            )}
             <LeadCapture
               matches={top3.map(toReportMatch)}
               {...(regionPref ? { regionPreference: regionPref } : {})}

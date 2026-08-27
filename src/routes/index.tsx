@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Disclaimer } from "@/components/disclaimer";
+import { OfferCtaCard } from "@/components/offer-cta-card";
+import { THAILAND_CALL } from "@/data/offers";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { DESTINATIONS } from "@/data/destinations";
 import { TOTAL_STEPS } from "@/data/questions";
@@ -268,6 +270,14 @@ function Landing() {
               </Card>
             ))}
           </div>
+        </section>
+
+        <section className="mx-auto max-w-3xl px-4 pb-16 sm:px-6 sm:pb-20">
+          <OfferCtaCard
+            offer={THAILAND_CALL}
+            placement="home"
+            note="Want to go deeper on one country? Thailand is our first one-to-one planning call."
+          />
         </section>
 
         <section className="border-y border-border/70 bg-secondary/40">
