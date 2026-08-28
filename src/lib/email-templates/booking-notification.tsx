@@ -34,7 +34,7 @@ export interface BookingNotificationProps {
 const INK = '#151e32'
 const MUTED = '#6b7280'
 
-const Row = ({ label, value }: { label: string; value?: string | null }) =>
+const Row = ({ label, value }: { label: string; value?: string | null | undefined }) =>
   value ? (
     <Text style={row}>
       <span style={labelStyle}>{label}: </span>
