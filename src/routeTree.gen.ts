@@ -22,6 +22,8 @@ import { Route as ThailandCallConfirmedRouteImport } from './routes/thailand-cal
 import { Route as ApiPublicBookingsRouteImport } from './routes/api/public/bookings'
 import { Route as ApiPublicLeadsRouteImport } from './routes/api/public/leads'
 import { Route as ApiPublicOfferCheckoutRouteImport } from './routes/api/public/offer-checkout'
+import { Route as RetireThailandIndexRouteImport } from './routes/retire.thailand.index'
+import { Route as RetireThailand2000AMonthRouteImport } from './routes/retire.thailand.2000-a-month'
 import { Route as ApiPublicOfferCheckoutConfirmRouteImport } from './routes/api/public/offer-checkout.confirm'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -92,6 +94,17 @@ const ApiPublicOfferCheckoutRoute = ApiPublicOfferCheckoutRouteImport.update({
   path: '/api/public/offer-checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RetireThailandIndexRoute = RetireThailandIndexRouteImport.update({
+  id: '/retire/thailand/',
+  path: '/retire/thailand/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RetireThailand2000AMonthRoute =
+  RetireThailand2000AMonthRouteImport.update({
+    id: '/retire/thailand/2000-a-month',
+    path: '/retire/thailand/2000-a-month',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicOfferCheckoutConfirmRoute =
   ApiPublicOfferCheckoutConfirmRouteImport.update({
     id: '/confirm',
@@ -129,6 +142,8 @@ export interface FileRoutesByFullPath {
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
   '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
+  '/retire/thailand/2000-a-month': typeof RetireThailand2000AMonthRoute
+  '/retire/thailand/': typeof RetireThailandIndexRoute
   '/api/public/offer-checkout/confirm': typeof ApiPublicOfferCheckoutConfirmRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -146,6 +161,8 @@ export interface FileRoutesByTo {
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
   '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
+  '/retire/thailand/2000-a-month': typeof RetireThailand2000AMonthRoute
+  '/retire/thailand': typeof RetireThailandIndexRoute
   '/api/public/offer-checkout/confirm': typeof ApiPublicOfferCheckoutConfirmRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -166,6 +183,8 @@ export interface FileRoutesById {
   '/api/public/bookings': typeof ApiPublicBookingsRoute
   '/api/public/leads': typeof ApiPublicLeadsRoute
   '/api/public/offer-checkout': typeof ApiPublicOfferCheckoutRouteWithChildren
+  '/retire/thailand/2000-a-month': typeof RetireThailand2000AMonthRoute
+  '/retire/thailand/': typeof RetireThailandIndexRoute
   '/api/public/offer-checkout/confirm': typeof ApiPublicOfferCheckoutConfirmRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -187,6 +206,8 @@ export interface FileRouteTypes {
     | '/api/public/bookings'
     | '/api/public/leads'
     | '/api/public/offer-checkout'
+    | '/retire/thailand/2000-a-month'
+    | '/retire/thailand/'
     | '/api/public/offer-checkout/confirm'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -204,6 +225,8 @@ export interface FileRouteTypes {
     | '/api/public/bookings'
     | '/api/public/leads'
     | '/api/public/offer-checkout'
+    | '/retire/thailand/2000-a-month'
+    | '/retire/thailand'
     | '/api/public/offer-checkout/confirm'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -223,6 +246,8 @@ export interface FileRouteTypes {
     | '/api/public/bookings'
     | '/api/public/leads'
     | '/api/public/offer-checkout'
+    | '/retire/thailand/2000-a-month'
+    | '/retire/thailand/'
     | '/api/public/offer-checkout/confirm'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -239,6 +264,8 @@ export interface RootRouteChildren {
   ApiPublicBookingsRoute: typeof ApiPublicBookingsRoute
   ApiPublicLeadsRoute: typeof ApiPublicLeadsRoute
   ApiPublicOfferCheckoutRoute: typeof ApiPublicOfferCheckoutRouteWithChildren
+  RetireThailand2000AMonthRoute: typeof RetireThailand2000AMonthRoute
+  RetireThailandIndexRoute: typeof RetireThailandIndexRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -337,6 +364,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicOfferCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/retire/thailand/': {
+      id: '/retire/thailand/'
+      path: '/retire/thailand'
+      fullPath: '/retire/thailand/'
+      preLoaderRoute: typeof RetireThailandIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/retire/thailand/2000-a-month': {
+      id: '/retire/thailand/2000-a-month'
+      path: '/retire/thailand/2000-a-month'
+      fullPath: '/retire/thailand/2000-a-month'
+      preLoaderRoute: typeof RetireThailand2000AMonthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/offer-checkout/confirm': {
       id: '/api/public/offer-checkout/confirm'
       path: '/confirm'
@@ -419,6 +460,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBookingsRoute: ApiPublicBookingsRoute,
   ApiPublicLeadsRoute: ApiPublicLeadsRoute,
   ApiPublicOfferCheckoutRoute: ApiPublicOfferCheckoutRouteWithChildren,
+  RetireThailand2000AMonthRoute: RetireThailand2000AMonthRoute,
+  RetireThailandIndexRoute: RetireThailandIndexRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
