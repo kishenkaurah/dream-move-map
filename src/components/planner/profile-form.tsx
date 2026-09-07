@@ -6,6 +6,8 @@ import {
 } from "@/components/ui/accordion";
 import { NumberField, ChoiceField, CheckField } from "./fields";
 import type { HouseholdProfile } from "@/lib/planner/types";
+import { formatExact } from "@/lib/planner/fx";
+import { profileSchema } from "@/lib/planner/storage";
 import { changeProfileCurrency } from "@/lib/planner/quiz-bridge";
 
 const requiredNumber = (n: number | null) => n ?? Number.NaN;
@@ -19,6 +21,39 @@ export function ProfileForm({
   const set = (patch: Partial<HouseholdProfile>) =>
     onChange({ ...p, ...patch, confirmedByUser: false });
   const unit = p.currency;
+  const validIncome =
+    profileSchema
+      .pick({
+        monthlyIncomeNow: true,
+        currentAge: true,
+        moveAge: true,
+        homeProperty: true,
+        netRentMonthly: true,
+        laterIncomeMonthly: true,
+        laterIncomeStartAge: true,
+        laterIncomeConfirmed: true,
+        ongoingHomeExpensesMonthly: true,
+        inflationAnnual: true,
+      })
+      .safeParse(p).success &&
+    p.monthlyIncomeNow !== null &&
+    p.currentAge !== null &&
+    p.moveAge !== null &&
+    p.moveAge >= p.currentAge;
+  const moveMonths = Math.round(((p.moveAge ?? 0) - (p.currentAge ?? 0)) * 12);
+  const ageAtMove = (p.currentAge ?? 0) + moveMonths / 12;
+  const rent = p.homeProperty === "rent" ? p.netRentMonthly : 0;
+  const later =
+    p.laterIncomeConfirmed &&
+    p.laterIncomeStartAge !== null &&
+    p.laterIncomeStartAge <= ageAtMove + 1e-9
+      ? p.laterIncomeMonthly
+      : 0;
+  const income = (p.monthlyIncomeNow ?? 0) + rent + later;
+  const homeCosts =
+    p.ongoingHomeExpensesMonthly * Math.pow(Math.pow(1 + p.inflationAnnual, 1 / 12), moveMonths);
+  const money = (value: number) => formatExact(value, p.currency);
+
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
@@ -224,7 +259,7 @@ export function ProfileForm({
               min={-90}
               max={50}
               onChange={(v) => set({ returnRateAnnual: requiredNumber(v) / 100 })}
-              hint="Illustrative constant return on accessible and retirement balances. Actual returns vary and their order matters; this is not a probability model."
+              hint="The editable 3% starting assumption applies to both cash/investments and retirement funds after fees and tax, before inflation. With 3% inflation, that means no growth in purchasing power. It is not a forecast for your investments. Actual returns vary."
             />
             <NumberField
               label="Annual expense inflation"
@@ -246,6 +281,74 @@ export function ProfileForm({
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+      <section
+        className="space-y-3 rounded-xl border bg-secondary/50 p-4"
+        aria-label="Monthly income available at your move"
+      >
+        <h3 className="text-base font-semibold">Monthly income available at your move</h3>
+        {validIncome ? (
+          <>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt>Recurring after-tax income</dt>
+                <dd>{money(p.monthlyIncomeNow!)}</dd>
+              </div>
+              {p.homeProperty === "rent" && (
+                <div className="flex justify-between gap-4">
+                  <dt>Net rental cashflow</dt>
+                  <dd>{money(rent)}</dd>
+                </div>
+              )}
+              {later > 0 && (
+                <div className="flex justify-between gap-4">
+                  <dt>Confirmed additional income at move</dt>
+                  <dd>{money(later)}</dd>
+                </div>
+              )}
+              <div className="flex justify-between gap-4 font-semibold">
+                <dt>Total monthly income</dt>
+                <dd>{money(income)}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt>Ongoing home expenses at move</dt>
+                <dd>{money(homeCosts)}</dd>
+              </div>
+            </dl>
+            <div className="border-t pt-3">
+              <p className="text-sm">
+                {income - homeCosts >= 0
+                  ? "Income available for life abroad"
+                  : "Monthly shortfall before overseas costs"}
+              </p>
+              <p className="display mt-1 text-2xl">
+                {money(Math.abs(income - homeCosts))}{" "}
+                <span className="text-sm">{unit} / month</span>
+              </p>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm">
+            Enter valid current and move ages and monthly income to see your total. Enter 0 if you
+            have no recurring income.
+          </p>
+        )}
+        {p.laterIncomeMonthly > 0 && later === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Additional income is excluded from this total until its confirmed start age has been
+            reached.
+          </p>
+        )}
+        <p className="text-sm text-muted-foreground">
+          Before overseas living costs. Investment growth, savings withdrawals and home-sale
+          proceeds are handled separately in the projection. Home expenses include inflation up to
+          the move.
+        </p>
+        {p.prefilledFromQuiz && !p.confirmedByUser && (
+          <p className="text-sm text-muted-foreground">
+            This total still uses an unconfirmed income estimate from your quiz.
+          </p>
+        )}
+      </section>
       <CheckField
         label="I have reviewed my financial inputs and understand that the results depend on these assumptions."
         checked={p.confirmedByUser}
