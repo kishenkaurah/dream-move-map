@@ -10,12 +10,7 @@ import { DestinationResultCard } from "@/components/destination-result-card";
 import { ComparisonTable } from "@/components/comparison-table";
 import { LeadCapture } from "@/components/lead-capture";
 import { OfferCtaCard } from "@/components/offer-cta-card";
-import {
-  THAILAND_CALL,
-  expertCountryForCountry,
-  expertOffer,
-  type Offer,
-} from "@/data/offers";
+import { THAILAND_CALL, expertCountryForCountry, expertOffer, type Offer } from "@/data/offers";
 import {
   clearAssessment,
   loadAssessment,
@@ -29,8 +24,6 @@ import { REGION_LABELS, regionForCountry, regionFromAnswer } from "@/data/region
 import { displayCurrency } from "@/lib/scoring";
 import { track } from "@/lib/analytics";
 import { alreadyRecorded } from "@/lib/analytics-session";
-
-
 
 export const Route = createFileRoute("/results")({
   head: () => ({
@@ -62,10 +55,7 @@ function ResultsPage() {
     setHydrated(true);
   }, []);
 
-  const missingQuestions = useMemo(
-    () => unansweredQuestions(answers.answers),
-    [answers],
-  );
+  const missingQuestions = useMemo(() => unansweredQuestions(answers.answers), [answers]);
   const complete = missingQuestions.length === 0;
 
   const allResults = useMemo(
@@ -99,9 +89,7 @@ function ResultsPage() {
   const topMatch = top3[0];
 
   /** Only ever promoted when the country is genuinely in the shortlist. */
-  const contextualOffer = useMemo<
-    { offer: Offer; note: string; confirmed: boolean } | null
-  >(() => {
+  const contextualOffer = useMemo<{ offer: Offer; note: string; confirmed: boolean } | null>(() => {
     for (const r of top3) {
       const config = expertCountryForCountry(r.destination.country);
       if (!config) continue;
@@ -131,8 +119,6 @@ function ResultsPage() {
       regionFilterActive: Boolean(regionPref),
     });
   }, [hydrated, complete, topMatch, results.length, regionPref]);
-
-
 
   function restart() {
     clearAssessment();
@@ -210,14 +196,27 @@ function ResultsPage() {
             </h1>
             <p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground">
               {regionPref ? `Filtered to ${REGION_LABELS[regionPref]}, ranked ` : "Ranked "}
-              against the profile you described, using eight weighted factors. Open the
-              breakdown on any card to see precisely how each score was reached — and where a
-              destination has a blocking constraint rather than a minor drawback.
+              against the profile you described, using eight weighted factors. Open the breakdown on
+              any card to see precisely how each score was reached — and where a destination has a
+              blocking constraint rather than a minor drawback.
             </p>
           </div>
         </section>
 
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-5">
+            <div>
+              <h2 className="display text-xl">What would life in your shortlist cost?</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Use one financial profile to explore budgets and compare destinations.
+              </p>
+            </div>
+            <Button asChild>
+              <Link to="/planner" search={{ city: top3[0]?.destination.id ?? "" }}>
+                Build my affordability plan
+              </Link>
+            </Button>
+          </div>
           <Tabs defaultValue="matches">
             <TabsList>
               <TabsTrigger value="matches">Top matches</TabsTrigger>
@@ -292,9 +291,7 @@ function ResultsPage() {
               <div className="rounded-xl border border-border bg-card p-5">
                 {showOutside ? (
                   <>
-                    <h2 className="display text-lg">
-                      Outside {REGION_LABELS[regionPref]}
-                    </h2>
+                    <h2 className="display text-lg">Outside {REGION_LABELS[regionPref]}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Scored exactly the same way — worth a look before you commit to a region.
                     </p>

@@ -162,8 +162,8 @@ function ThailandOn2000() {
                 pace for slightly more, with fewer specialist medical services on the doorstep.
               </>,
               <>
-                <strong className="text-foreground">Bangkok</strong> gives you the best hospitals and
-                transport in the country; $2,000 works but with less housing space.
+                <strong className="text-foreground">Bangkok</strong> gives you the best hospitals
+                and transport in the country; $2,000 works but with less housing space.
               </>,
               <>
                 <strong className="text-foreground">Phuket</strong> is the most expensive of the
@@ -184,15 +184,12 @@ function ThailandOn2000() {
             ]}
           />
           <p>
-            If any of those apply, look at cheaper destinations too. Our{" "}
-            <Link
-              to="/guides/retire-abroad-on-2000-a-month"
-              className="text-primary underline underline-offset-4"
-            >
-              global $2,000-a-month shortlist
+            If any of those apply, explore other destinations too. Our{" "}
+            <Link to="/assessment" className="text-primary underline underline-offset-4">
+              retirement destination quiz
             </Link>{" "}
-            includes Vietnam, Malaysia and the Philippines, where the same money goes further. For
-            the wider picture on Thailand, see the{" "}
+            helps you find destinations that match your budget and preferences. For the wider
+            picture on Thailand, see the{" "}
             <Link to="/retire/thailand" className="text-primary underline underline-offset-4">
               full Thailand retirement guide
             </Link>

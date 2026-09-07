@@ -107,9 +107,12 @@ function RetireThailand() {
           />
           <p>
             The practical read: a single retiree on around $2,000 a month lives comfortably almost
-            anywhere in Thailand outside central Bangkok and beachfront Phuket. Below roughly
-            $1,000 solo, the numbers get tight fast — see{" "}
-            <Link to="/retire/thailand/2000-a-month" className="text-primary underline underline-offset-4">
+            anywhere in Thailand outside central Bangkok and beachfront Phuket. Below roughly $1,000
+            solo, the numbers get tight fast — see{" "}
+            <Link
+              to="/retire/thailand/2000-a-month"
+              className="text-primary underline underline-offset-4"
+            >
               our breakdown of a $2,000 monthly budget
             </Link>
             .
@@ -141,12 +144,13 @@ function RetireThailand() {
             );
           })}
           <p className="mt-4">
-            Torn between the north and the coast? Read{" "}
+            Torn between the north and the coast? Use the{" "}
             <Link
-              to="/compare/chiang-mai-vs-hua-hin"
+              to="/planner"
+              search={{ city: "chiang_mai" }}
               className="text-primary underline underline-offset-4"
             >
-              Chiang Mai vs Hua Hin
+              affordability planner to compare city budgets
             </Link>
             .
           </p>
@@ -231,8 +235,8 @@ function RetireThailand() {
             conditions that burning season would aggravate, or you want to be a short flight from
             family in Europe or North America. Portugal, Spain, Mexico and Panama score better on
             several of those for many people —{" "}
-            <Link to="/compare/thailand-vs-malaysia" className="text-primary underline underline-offset-4">
-              Malaysia is the closest direct alternative in Asia
+            <Link to="/assessment" className="text-primary underline underline-offset-4">
+              take the quiz to explore your alternatives
             </Link>
             .
           </p>

@@ -13,7 +13,7 @@
  */
 import type { CurrencyCode } from "@/lib/currency";
 
-export const PLANNER_SCHEMA_VERSION = 1;
+export const PLANNER_SCHEMA_VERSION = 2;
 
 export type HomeCountry = "AU" | "OTHER";
 export type HouseholdType = "solo" | "couple" | "family";
@@ -25,6 +25,8 @@ export type MaybeNumber = number | null;
 export interface HouseholdProfile {
   homeCountry: HomeCountry;
   currency: CurrencyCode;
+  /** Units of home currency per USD; editable indicative assumption. */
+  usdRate: number;
   currentAge: MaybeNumber;
   moveAge: MaybeNumber;
   household: HouseholdType;
@@ -111,4 +113,5 @@ export interface SavedPlan {
   profile: HouseholdProfile;
   scenarios: { name: string; scenario: CityScenario }[];
   savedAt: string;
+  draft: CityScenario | null;
 }

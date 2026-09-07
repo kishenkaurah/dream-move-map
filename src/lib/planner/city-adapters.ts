@@ -7,8 +7,7 @@
  * source, the adapter says so rather than stamping today's date.
  *
  * "Detailed planning" (beta) is currently configured for Thailand, Malaysia
- * and Portugal only, because those are the countries whose cost breakdowns we
- * have gone through item by item. Every other destination in the quiz stays
+ * and Portugal only, as the initial product scope. These budget shares have not been independently verified. Every other destination in the quiz stays
  * visible with an indicative budget only.
  */
 import { DESTINATIONS, type Destination } from "@/data/destinations";
@@ -79,7 +78,13 @@ const ADAPTERS: Record<string, CountryAdapter> = {
       "Private health cover at your age, including pre-existing conditions.",
       "Condo rental and service-charge quotes for your target building.",
     ],
-    officialLinks: [],
+    officialLinks: [
+      {
+        label: "Malaysia MM2H — official guidelines",
+        url: "https://www.mm2h.gov.my/apply/guidelines",
+        status: "verified",
+      },
+    ],
   },
   Portugal: {
     country: "Portugal",
@@ -93,7 +98,13 @@ const ADAPTERS: Record<string, CountryAdapter> = {
       "Private health insurance and any state scheme access.",
       "Rental market pricing, which has moved quickly in Lisbon and Porto.",
     ],
-    officialLinks: [],
+    officialLinks: [
+      {
+        label: "Portugal Ministry of Foreign Affairs — residency documentation",
+        url: "https://vistos.mne.gov.pt/en/national-visas/necessary-documentation/residency",
+        status: "verified",
+      },
+    ],
   },
 };
 
