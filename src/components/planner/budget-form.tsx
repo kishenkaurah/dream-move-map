@@ -6,9 +6,10 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { BUDGET_LABELS, adapterFor, cityById, homeCountryLinks } from "@/lib/planner/city-adapters";
-import { citySpending } from "@/lib/planner/spending";
+import { citySpending, allocateSurplus } from "@/lib/planner/spending";
 import { formatExact } from "@/lib/planner/fx";
 import { Progress } from "@/components/ui/progress";
+import { HousingSearch } from "./housing-search";
 import { NumberField } from "./fields";
 import type { BudgetItems, CityScenario, HouseholdProfile } from "@/lib/planner/types";
 
@@ -26,6 +27,8 @@ export function BudgetForm({
   const city = cityById(s.cityId)!;
   const adapter = adapterFor(city.country);
   const spending = citySpending(p, s);
+  const allocation = allocateSurplus(p, s);
+  const remaining = spending && Math.abs(spending.remaining) < 0.005 ? 0 : spending?.remaining;
   const money = (value: number) => formatExact(value, p.currency);
   const rate = p.usdRate;
   const usableRate = Number.isFinite(rate) && rate > 0;
@@ -78,14 +81,28 @@ export function BudgetForm({
             )}
             <p
               role="status"
-              className={
-                spending.remaining < 0 ? "font-semibold text-destructive" : "font-semibold"
-              }
+              className={remaining! < 0 ? "font-semibold text-destructive" : "font-semibold"}
             >
-              {spending.remaining < 0
-                ? `${money(-spending.remaining)} per month needed from savings`
-                : `${money(spending.remaining)} per month left to allocate or save`}
+              {remaining! < 0
+                ? `${money(-remaining!)} per month needed from savings`
+                : `${money(remaining!)} per month left to allocate or save`}
             </p>
+            {allocation && (
+              <div className="space-y-2 rounded-lg border bg-background p-3">
+                <p className="text-sm">
+                  You have room to spend more. Spread the remaining {money(spending.remaining)}{" "}
+                  across your current allowances in the same proportions.
+                </p>
+                <Button type="button" variant="outline" onClick={() => onChange(allocation)}>
+                  Allocate available income
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Keeps your contingency percentage and leaves zero allowances at zero. You can
+                  still edit each amount or leave money unspent. These become your spending choices,
+                  not market-price estimates.
+                </p>
+              </div>
+            )}
             <details>
               <summary className="cursor-pointer text-sm font-medium">
                 Where your monthly budget goes
@@ -162,6 +179,7 @@ export function BudgetForm({
           onChange={(v) => set({ budget: { ...s.budget, contingencyPct: v ?? Number.NaN } })}
         />
       </fieldset>
+      <HousingSearch key={s.id} scenario={s} profile={p} />
       <Accordion type="multiple" defaultValue={["move"]} className="border-y">
         <AccordionItem value="move">
           <AccordionTrigger>Cash needed for the move</AccordionTrigger>

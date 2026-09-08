@@ -300,7 +300,8 @@ describe("saved plans and quiz handoff", () => {
   });
 });
 
-import { citySpending, incomeAtMove } from "../src/lib/planner/spending";
+import { citySpending, incomeAtMove, allocateSurplus } from "../src/lib/planner/spending";
+import { propertySearch } from "../src/lib/planner/property-search";
 describe("income connected to city spending", () => {
   test("matches projection income and deficit with future inflation and stress", () => {
     const p = profile({
@@ -359,5 +360,81 @@ describe("income connected to city spending", () => {
     const b = citySpending(p, scenario())!;
     expect(b.remaining).toBe(-2100);
     expect(b.housingLimitToday).toBe(-100);
+  });
+});
+
+describe("surplus allocation and rental searches", () => {
+  test("allocates all available income while preserving proportions, buffers and move costs", () => {
+    const p = profile({
+      monthlyIncomeNow: 7000,
+      ongoingHomeExpensesMonthly: 200,
+      moveAge: 61,
+      inflationAnnual: 0.03,
+      usdRate: 1.52,
+    });
+    const s = scenario({
+      fxStressPct: 15,
+      expenseStressPct: 10,
+      lifestyleAdjustPct: 5,
+      movingSetupCost: 2000,
+      rentalDeposit: 1000,
+      visaFundsReserve: 5000,
+    });
+    s.budget.groceriesDining = 400;
+    s.budget.annualReturnTravel = 2400;
+    s.budget.contingencyPct = 10;
+    const original = structuredClone(s);
+    const allocated = allocateSurplus(p, s)!;
+    expect(allocated).not.toBeNull();
+    expect(citySpending(p, allocated)!.remaining).toBeCloseTo(0, 6);
+    expect(allocated.budget.housing / allocated.budget.groceriesDining).toBeCloseTo(5, 8);
+    expect(allocated.budget.annualReturnTravel / allocated.budget.housing).toBeCloseTo(1.2, 8);
+    expect(
+      citySpending(p, allocated)!.lines.find((x) => x.key === "annualReturnTravel")!.amount /
+        citySpending(p, allocated)!.lines.find((x) => x.key === "housing")!.amount,
+    ).toBeCloseTo(0.1, 8);
+    expect(allocated.budget.utilities).toBe(0);
+    expect(allocated.budget.contingencyPct).toBe(10);
+    expect(allocated.movingSetupCost).toBe(2000);
+    expect(allocated.rentalDeposit).toBe(1000);
+    expect(allocated.visaFundsReserve).toBe(5000);
+    expect(s).toEqual(original);
+    expect(allocateSurplus(p, allocated)).toBeNull();
+  });
+  test("does not invent an allocation for a deficit, empty budget or invalid income", () => {
+    expect(allocateSurplus(profile(), scenario())).toBeNull();
+    expect(allocateSurplus(profile({ monthlyIncomeNow: null }), scenario())).toBeNull();
+    const s = scenario();
+    s.budget.housing = 0;
+    expect(allocateSurplus(profile(), s)).toBeNull();
+  });
+  test("rental links use a local-currency ceiling and area-only fallback", () => {
+    const bangkok = propertySearch("bangkok", 1000, 33.456)!;
+    expect(bangkok.maximum).toBe(33456);
+    expect(bangkok.currency).toBe("THB");
+    expect(new URL(bangkok.url).searchParams.get("maxPrice")).toBe("33456");
+    expect(new URL(bangkok.url).pathname).toContain("in-bangkok-th10");
+    expect(new URL(bangkok.browseUrl).search).toBe("");
+    for (const id of [
+      "penang",
+      "kuala_lumpur",
+      "kuching",
+      "lisbon",
+      "porto",
+      "algarve",
+      "funchal",
+    ]) {
+      const search = propertySearch(id, 1000)!;
+      expect(search.priceFilter).toBe(false);
+      expect(new URL(search.url).search).toBe("");
+    }
+  });
+  test("invalid or unsupported housing searches do not generate links", () => {
+    expect(propertySearch("not-a-city", 1000)).toBeNull();
+    expect(propertySearch("bangkok", 0)).toBeNull();
+    expect(propertySearch("bangkok", -1000)).toBeNull();
+    expect(propertySearch("bangkok", NaN)).toBeNull();
+    expect(propertySearch("bangkok", 1000, NaN)).toBeNull();
+    expect(propertySearch("bangkok", 1000, 0)).toBeNull();
   });
 });

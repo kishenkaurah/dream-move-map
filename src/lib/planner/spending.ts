@@ -77,3 +77,19 @@ export function citySpending(p: HouseholdProfile, s: CityScenario) {
     housingLimitToday,
   };
 }
+
+/** Increase the current allowances proportionally to use the available income.
+ * Keep contingency as a percentage and annual travel as an annual amount.
+ * This is an allocation, never a claim that city prices rose with income.
+ */
+export function allocateSurplus(p: HouseholdProfile, s: CityScenario): CityScenario | null {
+  const current = citySpending(p, s);
+  if (!current || current.total <= 0 || current.remaining <= 0.01) return null;
+  const multiplier = current.available / current.total;
+  const budget = { ...s.budget };
+  for (const key of Object.keys(budget) as (keyof typeof budget)[]) {
+    if (key !== "contingencyPct") budget[key] *= multiplier;
+  }
+  const next = { ...s, budget };
+  return scenarioSchema.safeParse(next).success ? next : null;
+}
