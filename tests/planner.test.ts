@@ -413,9 +413,13 @@ describe("surplus allocation and rental searches", () => {
     const bangkok = propertySearch("bangkok", 1000, 33.456)!;
     expect(bangkok.maximum).toBe(33456);
     expect(bangkok.currency).toBe("THB");
-    expect(bangkok.priceFilter).toBe(false);
-    expect(new URL(bangkok.url).search).toBe("");
-    expect(new URL(bangkok.url).pathname).toContain("in-bangkok-th10");
+    expect(bangkok.priceFilter).toBe(true);
+    expect(new URL(bangkok.url).searchParams.get("maxPrice")).toBe("33456");
+    expect(new URL(bangkok.url).searchParams.get("regionCode")).toBe("TH10");
+    expect(new URL(bangkok.url).searchParams.get("bedrooms")).toBe("1");
+    expect(new URL(propertySearch("bangkok", 1000, 35, 3)!.url).searchParams.get("bedrooms")).toBe(
+      "3",
+    );
     expect(new URL(bangkok.browseUrl).search).toBe("");
     for (const id of [
       "penang",

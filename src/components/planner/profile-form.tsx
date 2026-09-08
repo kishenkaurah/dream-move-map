@@ -128,6 +128,11 @@ export function ProfileForm({
           </p>
         )}
       </div>
+      <p className="text-sm text-muted-foreground">
+        Household size selects the starting city cost estimate and suggests a bedroom count for
+        rental searches. It does not increase your income. When you allocate all available income,
+        the total stays the same for every household; edit the categories for your family's needs.
+      </p>
       {(p.retirementFunds ?? 0) > 0 && (
         <div className="space-y-4 rounded-xl border p-4">
           <NumberField

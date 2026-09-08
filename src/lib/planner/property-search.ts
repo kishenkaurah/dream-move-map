@@ -59,7 +59,13 @@ const AREAS: Record<string, { url: string; provider: string; priceFilter: boolea
     priceFilter: false,
   },
 };
-export function propertySearch(cityId: string, housingUsd: number, localRate?: number) {
+export function propertySearch(
+  cityId: string,
+  housingUsd: number,
+  localRate?: number,
+  bedrooms = 1,
+) {
+  if (!Number.isInteger(bedrooms) || bedrooms < 1 || bedrooms > 4) return null;
   const area = AREAS[cityId];
   const city = cityById(cityId);
   const currency = city && adapterFor(city.country).localCurrency;
@@ -68,8 +74,27 @@ export function propertySearch(cityId: string, housingUsd: number, localRate?: n
   if (!Number.isFinite(rate) || rate <= 0 || rate > 10000) return null;
   const maximum = Math.floor(housingUsd * rate);
   if (maximum < 1) return null;
-  const url = new URL(area.url);
-  // Use the provider's area page. Arbitrary price-filter URLs were unreliable;
-  // the UI supplies the cap for the user to apply on the provider.
-  return { ...area, url: url.href, browseUrl: area.url, currency, rate, maximum };
+  // Bangkok's query format was captured from the provider's own controls and
+  // opened in a fresh browser tab with price and bedroom filters retained.
+  const priceFilter = cityId === "bangkok";
+  const url = new URL(priceFilter ? "https://www.ddproperty.com/en/property-for-rent" : area.url);
+  if (priceFilter) {
+    url.searchParams.set("listingType", "rent");
+    url.searchParams.set("page", "1");
+    url.searchParams.set("regionCode", "TH10");
+    url.searchParams.set("_freetextDisplay", "Bangkok");
+    url.searchParams.set("isCommercial", "false");
+    url.searchParams.set("maxPrice", String(maximum));
+    url.searchParams.set("bedrooms", String(bedrooms));
+  }
+  return {
+    ...area,
+    priceFilter,
+    bedrooms,
+    url: url.href,
+    browseUrl: area.url,
+    currency,
+    rate,
+    maximum,
+  };
 }

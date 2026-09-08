@@ -259,7 +259,7 @@ export function BudgetForm({
           </p>
         </section>
       )}
-      <HousingSearch key={s.id} scenario={s} profile={p} />
+      <HousingSearch key={s.id} scenario={s} profile={p} onChange={onChange} />
       <Accordion type="multiple" defaultValue={["move"]} className="border-y">
         <AccordionItem value="move">
           <AccordionTrigger>Cash needed for the move</AccordionTrigger>

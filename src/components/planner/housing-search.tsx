@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { NumberField } from "./fields";
+import { NumberField, ChoiceField } from "./fields";
 import { propertySearch } from "@/lib/planner/property-search";
 import { cityById, adapterFor } from "@/lib/planner/city-adapters";
 import { LOCAL_RATES, formatExact } from "@/lib/planner/fx";
@@ -10,9 +10,11 @@ import type { HouseholdProfile, CityScenario } from "@/lib/planner/types";
 export function HousingSearch({
   scenario: s,
   profile: p,
+  onChange,
 }: {
   scenario: CityScenario;
   profile: HouseholdProfile;
+  onChange: (s: CityScenario) => void;
 }) {
   const city = cityById(s.cityId)!;
   const currency = adapterFor(city.country).localCurrency;
@@ -20,13 +22,14 @@ export function HousingSearch({
   const [copyResult, setCopyResult] = useState<{ maximum: number; message: string } | null>(null);
   if (!currency) return null;
   const rate = rateOverride ?? (p.currency === currency ? p.usdRate : LOCAL_RATES[currency]);
+  const bedrooms = s.rentalBedrooms ?? (p.household === "family" ? 2 : 1);
   const housing = s.budget.housing * (1 + s.lifestyleAdjustPct / 100);
   const search =
     scenarioSchema.safeParse(s).success &&
     Number.isFinite(p.usdRate) &&
     p.usdRate >= 0.0001 &&
     p.usdRate <= 10000
-      ? propertySearch(s.cityId, housing, rate)
+      ? propertySearch(s.cityId, housing, rate, bedrooms)
       : null;
   return (
     <section
@@ -39,6 +42,21 @@ export function HousingSearch({
           Explore homes in {city.name}, then adjust your allowance using actual asking rents.
         </p>
       </div>
+      <ChoiceField
+        label="Bedrooms to search for"
+        value={String(bedrooms)}
+        choices={[
+          ["1", "1 bedroom"],
+          ["2", "2 bedrooms"],
+          ["3", "3 bedrooms"],
+          ["4", "4 bedrooms"],
+        ]}
+        onChange={(v) => onChange({ ...s, rentalBedrooms: Number(v) })}
+      />
+      <p className="text-sm text-muted-foreground">
+        Starts at 1 bedroom for one or two adults, or 2 for a household with children. Change it to
+        suit your household. This selects homes; it does not change your housing allowance.
+      </p>
       {search ? (
         <>
           <p className="display text-2xl">
@@ -80,10 +98,17 @@ export function HousingSearch({
                 {copyResult.message}
               </p>
             )}
-            <p className="text-sm font-medium">2. Open listings and set the maximum-price filter</p>
+            <p className="text-sm font-medium">
+              {search.priceFilter
+                ? "Open results with your rent cap and bedroom count applied"
+                : `Open listings, then set ${bedrooms} bedrooms and your maximum rent`}
+            </p>
             <Button asChild variant="outline" className="h-auto w-full whitespace-normal">
-              <a href={search.browseUrl} target="_blank" rel="noopener noreferrer">
-                Open {city.name} rentals on {search.provider} ↗
+              <a href={search.url} target="_blank" rel="noopener noreferrer">
+                {search.priceFilter
+                  ? `Find ${bedrooms}-bedroom homes up to ${search.maximum.toLocaleString("en")} ${currency} / month`
+                  : `Open ${city.name} rentals on ${search.provider}`}{" "}
+                ↗
               </a>
             </Button>
             {s.cityId === "bangkok" && (
@@ -96,15 +121,16 @@ export function HousingSearch({
                 Also browse Bangkok rentals on FazWaz ↗
               </a>
             )}
-            <a href={search.browseUrl} className="block text-sm text-primary underline">
+            <a href={search.url} className="block text-sm text-primary underline">
               If no new tab opens, open listings in this tab
             </a>
           </div>
           <p className="text-sm text-muted-foreground">
-            These links open city listings. Your price cap is not applied automatically, and results
-            are not shown inside this planner. Choose monthly rent in {currency}, then check
-            bedrooms, neighbourhood, lease length and availability. Keep room for housing charges
-            outside rent.
+            {search.priceFilter
+              ? "The Bangkok link applies your maximum monthly rent and exact bedroom count. Results can include condos, apartments and houses."
+              : "This city's link opens area listings; apply the bedroom and price filters on the property site."}{" "}
+            Results open on the property site. Check the selected filters, neighbourhood, lease
+            length and availability. Keep room for charges outside rent.
           </p>
         </>
       ) : (

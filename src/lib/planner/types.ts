@@ -96,6 +96,8 @@ export interface CityScenario {
   cityId: string;
   /** Recalculate category allowances from spending power until manually edited. */
   autoAllocate: boolean;
+  /** Null uses the household bedroom suggestion. */
+  rentalBedrooms: number | null;
   /** Monthly items in USD (annualReturnTravel is annual USD). */
   budget: BudgetItems;
   /** One-off relocation and setup spend (USD). Genuinely spent. */
