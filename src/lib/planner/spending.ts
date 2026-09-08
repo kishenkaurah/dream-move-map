@@ -133,6 +133,7 @@ export function citySpending(p: HouseholdProfile, s: CityScenario) {
   return {
     ...funds,
     lines,
+    subtotal: base,
     contingency,
     total,
     remaining: funds.available - total,

@@ -6,22 +6,22 @@ const AREAS: Record<string, { url: string; provider: string; priceFilter: boolea
   bangkok: {
     url: "https://www.ddproperty.com/en/property-for-rent/in-bangkok-th10",
     provider: "DDproperty",
-    priceFilter: true,
+    priceFilter: false,
   },
   chiang_mai: {
     url: "https://www.ddproperty.com/en/condo-for-rent/in-chiang-mai-th50",
     provider: "DDproperty",
-    priceFilter: true,
+    priceFilter: false,
   },
   hua_hin: {
     url: "https://www.ddproperty.com/en/condo-for-rent/in-hua-hin-th7707",
     provider: "DDproperty",
-    priceFilter: true,
+    priceFilter: false,
   },
   phuket: {
     url: "https://www.ddproperty.com/en/condo-for-rent/in-phuket-th83",
     provider: "DDproperty",
-    priceFilter: true,
+    priceFilter: false,
   },
   penang: {
     url: "https://www.propertyguru.com.my/property-for-rent/in-penang-5qvq6",
@@ -69,9 +69,7 @@ export function propertySearch(cityId: string, housingUsd: number, localRate?: n
   const maximum = Math.floor(housingUsd * rate);
   if (maximum < 1) return null;
   const url = new URL(area.url);
-  // maxPrice is the current DDproperty parameter observed in indexed rental
-  // searches. City pages are verified; arbitrary price combinations must be
-  // confirmed on the provider. No personal profile is sent in this link.
-  if (area.priceFilter) url.searchParams.set("maxPrice", String(maximum));
+  // Use the provider's area page. Arbitrary price-filter URLs were unreliable;
+  // the UI supplies the cap for the user to apply on the provider.
   return { ...area, url: url.href, browseUrl: area.url, currency, rate, maximum };
 }

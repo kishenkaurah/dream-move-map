@@ -17,6 +17,7 @@ export function HousingSearch({
   const city = cityById(s.cityId)!;
   const currency = adapterFor(city.country).localCurrency;
   const [rateOverride, setRateOverride] = useState<number | null>(null);
+  const [copyResult, setCopyResult] = useState<{ maximum: number; message: string } | null>(null);
   if (!currency) return null;
   const rate = rateOverride ?? (p.currency === currency ? p.usdRate : LOCAL_RATES[currency]);
   const housing = s.budget.housing * (1 + s.lifestyleAdjustPct / 100);
@@ -33,7 +34,7 @@ export function HousingSearch({
       aria-label="Explore homes within your housing allowance"
     >
       <div>
-        <h3 className="text-base font-semibold">What could your housing budget get you?</h3>
+        <h3 className="text-base font-semibold">Find rentals in {city.name}</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Explore homes in {city.name}, then adjust your allowance using actual asking rents.
         </p>
@@ -49,30 +50,62 @@ export function HousingSearch({
             including your lifestyle adjustment. This is the full housing allowance; allow room for
             housing charges not included in rent.
           </p>
-          <Button asChild variant="outline" className="h-auto whitespace-normal">
-            <a href={search.url} target="_blank" rel="noreferrer">
-              {search.priceFilter
-                ? `Search rentals up to ${search.maximum.toLocaleString("en")} ${currency}`
-                : `Browse ${city.name} rentals on ${search.provider}`}
-            </a>
-          </Button>
-          <p className="text-sm text-muted-foreground">
-            {search.priceFilter
-              ? "The link requests your maximum price. Confirm that the filter is applied when the site opens."
-              : `Set the maximum monthly rent to ${search.maximum.toLocaleString("en")} ${currency} on ${search.provider}; this link selects the area only.`}{" "}
-            Check bedrooms, floor area, neighbourhood and lease duration. Listings may be seasonal,
-            duplicated or no longer available.
-          </p>
-          {search.priceFilter && (
-            <a
-              href={search.browseUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="block text-sm text-primary underline"
+          <div className="space-y-3 rounded-lg border bg-background p-3">
+            <p className="text-sm font-medium">
+              1. Copy your maximum monthly rent: {search.maximum.toLocaleString("en")} {currency}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(String(search.maximum));
+                  setCopyResult({
+                    maximum: search.maximum,
+                    message:
+                      "Rent cap copied. Paste it into the maximum-price filter on the property site.",
+                  });
+                } catch {
+                  setCopyResult({
+                    maximum: search.maximum,
+                    message: `Copy is unavailable in this browser. Enter ${search.maximum.toLocaleString("en")} manually in the maximum-price filter.`,
+                  });
+                }
+              }}
             >
-              Browse all {city.name} rentals if the price filter does not open
+              Copy rent cap
+            </Button>
+            {copyResult?.maximum === search.maximum && (
+              <p role="status" className="text-sm">
+                {copyResult.message}
+              </p>
+            )}
+            <p className="text-sm font-medium">2. Open listings and set the maximum-price filter</p>
+            <Button asChild variant="outline" className="h-auto w-full whitespace-normal">
+              <a href={search.browseUrl} target="_blank" rel="noopener noreferrer">
+                Open {city.name} rentals on {search.provider} ↗
+              </a>
+            </Button>
+            {s.cityId === "bangkok" && (
+              <a
+                className="block text-sm text-primary underline"
+                href="https://www.fazwaz.com/property-for-rent/thailand/bangkok"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Also browse Bangkok rentals on FazWaz ↗
+              </a>
+            )}
+            <a href={search.browseUrl} className="block text-sm text-primary underline">
+              If no new tab opens, open listings in this tab
             </a>
-          )}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            These links open city listings. Your price cap is not applied automatically, and results
+            are not shown inside this planner. Choose monthly rent in {currency}, then check
+            bedrooms, neighbourhood, lease length and availability. Keep room for housing charges
+            outside rent.
+          </p>
         </>
       ) : (
         <p className="text-sm">

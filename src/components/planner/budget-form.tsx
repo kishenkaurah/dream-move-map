@@ -29,12 +29,18 @@ export function BudgetForm({
   const spending = citySpending(p, s);
   const allocation = allocateSurplus(p, s);
   const remaining = spending && Math.abs(spending.remaining) < 0.005 ? 0 : spending?.remaining;
-  const money = (value: number) => formatExact(value, p.currency);
+  const money = (value: number) => formatExact(value, p.currency, 2);
   const rate = p.usdRate;
   const usableRate = Number.isFinite(rate) && rate > 0;
   const set = (patch: Partial<CityScenario>) => onChange({ ...s, ...patch });
   const amount = (v: number) => (usableRate ? v * rate : Number.NaN);
   const usd = (v: number | null) => (v === null || !usableRate ? Number.NaN : v / rate);
+  const inputSubtotal =
+    Object.entries(s.budget)
+      .filter(([key]) => key !== "contingencyPct")
+      .reduce((sum, [key, value]) => sum + value / (key === "annualReturnTravel" ? 12 : 1), 0) *
+    rate;
+  const inputBuffer = (inputSubtotal * s.budget.contingencyPct) / 100;
   const officialLinks = [
     ...adapter.officialLinks,
     ...(p.homeCountry === "AU" ? homeCountryLinks() : []),
@@ -63,9 +69,19 @@ export function BudgetForm({
         className="space-y-3 rounded-xl border bg-secondary/50 p-4"
         aria-label="Your city budget and available income"
       >
-        <h3 className="text-base font-semibold">How your income covers life in {city.name}</h3>
+        <h3 className="text-base font-semibold">Your total overseas budget in {city.name}</h3>
         {spending ? (
           <>
+            <div className="rounded-lg bg-background p-4">
+              <p className="text-sm font-semibold">Total overseas spend at your move</p>
+              <p className="display mt-1 text-3xl">
+                {money(spending.total)} <span className="text-base">{p.currency} / month</span>
+              </p>
+              <p className="mt-1 text-sm">
+                {money(spending.total * 12)} {p.currency} per year, including travel and your
+                unexpected-cost buffer.
+              </p>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <p className="text-sm">Spending power including savings, after home expenses</p>
@@ -75,9 +91,9 @@ export function BudgetForm({
                 </p>
               </div>
               <div>
-                <p className="text-sm">Your city budget at move</p>
+                <p className="text-sm">Included buffer for unexpected costs</p>
                 <p className="display text-2xl">
-                  {money(spending.total)}
+                  {money(spending.contingency)}
                   <span className="text-sm"> / month</span>
                 </p>
               </div>
@@ -111,33 +127,46 @@ export function BudgetForm({
                   Allocate available income
                 </Button>
                 <p className="text-sm text-muted-foreground">
-                  Keeps your contingency percentage and leaves zero allowances at zero. You can
-                  still edit each amount or leave money unspent. These become your spending choices,
-                  not market-price estimates.
+                  Keeps your buffer percentage and leaves zero allowances at zero. You can still
+                  edit each amount or leave money unspent. These become your spending choices, not
+                  market-price estimates.
                 </p>
               </div>
             )}
-            <details>
-              <summary className="cursor-pointer text-sm font-medium">
-                Where your monthly budget goes
-              </summary>
+            <div>
+              <h4 className="text-sm font-semibold">
+                How the monthly total adds up ({p.currency} at your move)
+              </h4>
               <dl className="mt-3 space-y-2 text-sm">
                 {spending.lines.map((line) => (
                   <div key={line.key} className="flex justify-between gap-3">
                     <dt>
                       {line.key === "annualReturnTravel"
-                        ? "Flights home (monthly allowance)"
+                        ? "Return-home travel (annual allowance ÷ 12)"
                         : BUDGET_LABELS[line.key as keyof typeof BUDGET_LABELS]}
                     </dt>
                     <dd className="shrink-0 tabular-nums">{money(line.amount)}</dd>
                   </div>
                 ))}
+                <div className="flex justify-between gap-3 border-t pt-2 font-medium">
+                  <dt>Living costs + travel subtotal</dt>
+                  <dd className="shrink-0">{money(spending.subtotal)}</dd>
+                </div>
                 <div className="flex justify-between gap-3">
-                  <dt>Contingency</dt>
-                  <dd>{money(spending.contingency)}</dd>
+                  <dt>+ Unexpected-cost buffer ({s.budget.contingencyPct}%)</dt>
+                  <dd className="shrink-0">{money(spending.contingency)}</dd>
+                </div>
+                <div className="flex justify-between gap-3 border-t pt-2 font-bold">
+                  <dt>= Total overseas spend / month</dt>
+                  <dd className="shrink-0">{money(spending.total)}</dd>
                 </div>
               </dl>
-            </details>
+              <p className="mt-2 text-sm text-muted-foreground">
+                The buffer is included once in the total above. It is extra room for unexpected
+                costs, not a separate bill. Home-country expenses and one-off moving costs are
+                excluded.
+              </p>
+            </div>
             <p className="text-sm text-muted-foreground">
               {spending.housingLimitToday >= 0
                 ? `Keeping all other choices, income and the savings allowance could cover up to ${money(spending.housingLimitToday)} per month in the housing field below.`
@@ -145,11 +174,11 @@ export function BudgetForm({
               This is a spending limit, not a rental-price estimate.
             </p>
             <p className="text-sm text-muted-foreground">
-              Totals are in {p.currency} at your move date, including inflation, contingency and
-              your stress settings. Edit the allowances below to see the trade-offs. The total
-              includes {money(spending.savingsMonthly)} per month from your savings allowance.
-              Unused allowance stays invested. The projection deducts actual spending above
-              recurring income from savings.
+              Totals are in {p.currency} at your move date, including inflation, the unexpected-cost
+              buffer and your stress settings. Edit the allowances below to see the trade-offs.
+              Available spending power includes {money(spending.savingsMonthly)} per month from your
+              savings allowance. Unused allowance stays invested. The projection deducts actual
+              spending above recurring income from savings.
             </p>
             {p.prefilledFromQuiz && !p.confirmedByUser && (
               <p className="text-sm text-muted-foreground">
@@ -179,7 +208,7 @@ export function BudgetForm({
             onChange={(v) => set({ autoAllocate: false, budget: { ...s.budget, [key]: usd(v) } })}
             hint={
               key === "annualReturnTravel"
-                ? "Annual household allowance, divided by 12 in monthly totals. Automatic mode assigns 5% of the budget before contingency to travel; replace it with your expected annual cost."
+                ? "Annual household allowance, divided by 12 in monthly totals. Automatic mode assigns 5% of the budget before the buffer to travel; replace it with your expected annual cost."
                 : key === "healthcare"
                   ? "Replace with an insurance quote plus routine care; do not add the allowance again."
                   : undefined
@@ -187,14 +216,49 @@ export function BudgetForm({
           />
         ))}
         <NumberField
-          label="Contingency on living costs"
+          label="Buffer for unexpected costs"
           unit="%"
           value={s.budget.contingencyPct}
           min={0}
           max={100}
           onChange={(v) => set({ budget: { ...s.budget, contingencyPct: v ?? Number.NaN } })}
+          hint="Percentage of all living costs plus the monthly travel allowance. Included once in your total. In automatic mode, a larger buffer leaves less for the other categories. Set 0 for no buffer."
         />
       </fieldset>
+      {spending && (
+        <section
+          className="space-y-2 rounded-xl border bg-secondary/50 p-4"
+          aria-label="Total of the amounts entered above"
+        >
+          <h3 className="font-semibold">Total of your entries above — today's prices</h3>
+          <dl className="space-y-2 text-sm">
+            <div className="flex justify-between gap-3">
+              <dt>Monthly categories + annual travel ÷ 12</dt>
+              <dd className="shrink-0">{money(inputSubtotal)}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt>+ Unexpected-cost buffer ({s.budget.contingencyPct}%)</dt>
+              <dd className="shrink-0">{money(inputBuffer)}</dd>
+            </div>
+            <div className="flex justify-between gap-3 border-t pt-2 font-semibold">
+              <dt>= Monthly total before adjustments</dt>
+              <dd className="shrink-0">{money(inputSubtotal + inputBuffer)}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt>+ Move-date inflation and lifestyle / stress adjustments</dt>
+              <dd className="shrink-0">{money(spending.total - inputSubtotal - inputBuffer)}</dd>
+            </div>
+            <div className="flex justify-between gap-3 border-t pt-2 font-bold">
+              <dt>= Total overseas spend at move</dt>
+              <dd className="shrink-0">{money(spending.total)} / month</dd>
+            </div>
+          </dl>
+          <p className="text-sm text-muted-foreground">
+            All amounts in {p.currency}. Annual travel is divided by 12, not added as a monthly
+            bill. Totals use unrounded values; displayed rows may differ by a cent.
+          </p>
+        </section>
+      )}
       <HousingSearch key={s.id} scenario={s} profile={p} />
       <Accordion type="multiple" defaultValue={["move"]} className="border-y">
         <AccordionItem value="move">
