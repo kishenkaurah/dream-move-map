@@ -166,22 +166,21 @@ export function seedMonthlyTotal(d: Destination, household: HouseholdType): numb
 
 /**
  * Seeds an editable line-item budget from the indicative city band.
- * `annualReturnTravel` starts at 0 on purpose: we do not know where the user
- * flies from, and inventing a flight cost would be false precision. The UI
- * flags it as a missing input.
+ * Return-home travel receives 5% of the monthly allowance, stored annually.
+ * This is a spending allocation, not a flight quote; route and household needs vary.
  */
 export function seedBudget(d: Destination, household: HouseholdType): BudgetItems {
   const total = seedMonthlyTotal(d, household);
   const round = (n: number) => Math.round(n);
   return {
-    housing: round(total * SHARES.housing),
-    groceriesDining: round(total * SHARES.groceriesDining),
-    utilities: round(total * SHARES.utilities),
-    transport: round(total * SHARES.transport),
-    healthcare: round(total * SHARES.healthcare),
-    leisure: round(total * SHARES.leisure),
-    annualReturnTravel: 0,
-    otherAdmin: round(total * SHARES.otherAdmin),
+    housing: round(total * 0.95 * SHARES.housing),
+    groceriesDining: round(total * 0.95 * SHARES.groceriesDining),
+    utilities: round(total * 0.95 * SHARES.utilities),
+    transport: round(total * 0.95 * SHARES.transport),
+    healthcare: round(total * 0.95 * SHARES.healthcare),
+    leisure: round(total * 0.95 * SHARES.leisure),
+    annualReturnTravel: round(total * 0.05 * 12),
+    otherAdmin: round(total * 0.95 * SHARES.otherAdmin),
     contingencyPct: 5,
   };
 }

@@ -10,7 +10,7 @@ import { citySpending, allocateSurplus } from "@/lib/planner/spending";
 import { formatExact } from "@/lib/planner/fx";
 import { Progress } from "@/components/ui/progress";
 import { HousingSearch } from "./housing-search";
-import { NumberField } from "./fields";
+import { NumberField, CheckField } from "./fields";
 import type { BudgetItems, CityScenario, HouseholdProfile } from "@/lib/planner/types";
 
 export function BudgetForm({
@@ -49,6 +49,16 @@ export function BudgetForm({
           Reset city allowances
         </Button>
       </div>
+      <CheckField
+        label="Automatically allocate my available income and savings allowance"
+        checked={s.autoAllocate}
+        onChange={(v) => set({ autoAllocate: v })}
+      />
+      <p className="text-sm text-muted-foreground">
+        Automatic mode updates every category when your income or withdrawal rate changes, including
+        an annual return-home travel allowance. Editing a category switches to manual mode.
+        Allocations are spending choices, not quotes or a guarantee that the city is affordable.
+      </p>
       <section
         className="space-y-3 rounded-xl border bg-secondary/50 p-4"
         aria-label="Your city budget and available income"
@@ -93,7 +103,11 @@ export function BudgetForm({
                   You have room to spend more. Spread the remaining {money(spending.remaining)}{" "}
                   across your current allowances in the same proportions.
                 </p>
-                <Button type="button" variant="outline" onClick={() => onChange(allocation)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onChange({ ...allocation, autoAllocate: false })}
+                >
                   Allocate available income
                 </Button>
                 <p className="text-sm text-muted-foreground">
@@ -162,10 +176,10 @@ export function BudgetForm({
             label={label}
             unit={p.currency}
             value={amount(s.budget[key as keyof BudgetItems])}
-            onChange={(v) => set({ budget: { ...s.budget, [key]: usd(v) } })}
+            onChange={(v) => set({ autoAllocate: false, budget: { ...s.budget, [key]: usd(v) } })}
             hint={
               key === "annualReturnTravel"
-                ? "Annual total for your household, divided by 12 once."
+                ? "Annual household allowance, divided by 12 in monthly totals. Automatic mode assigns 5% of the budget before contingency to travel; replace it with your expected annual cost."
                 : key === "healthcare"
                   ? "Replace with an insurance quote plus routine care; do not add the allowance again."
                   : undefined

@@ -94,6 +94,8 @@ export interface BudgetItems {
 export interface CityScenario {
   id: string;
   cityId: string;
+  /** Recalculate category allowances from spending power until manually edited. */
+  autoAllocate: boolean;
   /** Monthly items in USD (annualReturnTravel is annual USD). */
   budget: BudgetItems;
   /** One-off relocation and setup spend (USD). Genuinely spent. */

@@ -1,5 +1,6 @@
 import type { CityScenario, HouseholdProfile } from "./types";
 import { profileSchema, scenarioSchema } from "./storage";
+import { cityById, seedBudget } from "./city-adapters";
 import { fxStressMultiplier } from "./fx";
 
 const incomeSchema = profileSchema.pick({
@@ -153,4 +154,31 @@ export function allocateSurplus(p: HouseholdProfile, s: CityScenario): CityScena
   }
   const next = { ...s, budget };
   return scenarioSchema.safeParse(next).success ? next : null;
+}
+
+/** Automatic mode uses city proportions each time, so changing the withdrawal
+ * rate can increase or decrease spending. Manual budgets remain untouched. */
+export function autoAllocateBudget(p: HouseholdProfile, s: CityScenario): CityScenario {
+  if (!s.autoAllocate) return s;
+  const city = cityById(s.cityId);
+  if (!city || !scenarioSchema.safeParse(s).success) return s;
+  const seeded = {
+    ...s,
+    budget: { ...seedBudget(city, p.household), contingencyPct: s.budget.contingencyPct },
+  };
+  const spending = citySpending(p, seeded);
+  if (!spending || !spending.savings || spending.available <= 0 || spending.total <= 0) return s;
+  const multiplier = spending.available / spending.total;
+  const budget = { ...seeded.budget };
+  for (const key of Object.keys(budget) as (keyof typeof budget)[]) {
+    if (key !== "contingencyPct") budget[key] *= multiplier;
+  }
+  const next = { ...s, budget };
+  if (!scenarioSchema.safeParse(next).success) return s;
+  return Object.keys(budget).every(
+    (key) =>
+      Math.abs(budget[key as keyof typeof budget] - s.budget[key as keyof typeof budget]) < 1e-7,
+  )
+    ? s
+    : next;
 }

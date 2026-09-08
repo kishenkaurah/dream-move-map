@@ -30,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
+import { autoAllocateBudget } from "@/lib/planner/spending";
 import { ProfileForm } from "@/components/planner/profile-form";
 import { BudgetForm } from "@/components/planner/budget-form";
 import { ProjectionView, Metric } from "@/components/planner/projection";
@@ -135,6 +136,14 @@ function PlannerPage() {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [dirty]);
+  useEffect(() => {
+    if (!ready || !scenario) return;
+    const allocated = autoAllocateBudget(profile, scenario);
+    if (allocated !== scenario) {
+      setScenario(allocated);
+      setDirty(true);
+    }
+  }, [ready, profile, scenario]);
   const city = cityById(cityId);
   const result = useMemo(
     () => (scenario ? runProjection({ profile, scenario, usdRate: profile.usdRate }) : null),
@@ -144,7 +153,11 @@ function PlannerPage() {
     () =>
       saved.map((entry) => ({
         ...entry,
-        result: runProjection({ profile, scenario: entry.scenario, usdRate: profile.usdRate }),
+        result: runProjection({
+          profile,
+          scenario: autoAllocateBudget(profile, entry.scenario),
+          usdRate: profile.usdRate,
+        }),
       })),
     [profile, saved],
   );

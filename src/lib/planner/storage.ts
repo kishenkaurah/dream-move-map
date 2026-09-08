@@ -47,6 +47,7 @@ export const scenarioSchema = z.object({
     const city = cityById(id);
     return city !== undefined && isDetailed(city.country);
   }, "This city does not support detailed planning yet."),
+  autoAllocate: z.boolean().default(true),
   budget: z.object({
     housing: money,
     groceriesDining: money,
@@ -121,6 +122,7 @@ export function newScenario(
   return {
     id: globalThis.crypto.randomUUID(),
     cityId,
+    autoAllocate: true,
     budget: seedBudget(city, household),
     movingSetupCost: 0,
     rentalDeposit: 0,

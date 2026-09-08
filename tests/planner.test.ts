@@ -520,3 +520,55 @@ describe("savings as spending power", () => {
     ).toBe(0);
   });
 });
+
+import { autoAllocateBudget } from "../src/lib/planner/spending";
+describe("automatic spending allocation", () => {
+  test("allocates spending power including annual travel and responds to withdrawal changes", () => {
+    const p = profile({ accessibleFunds: 1800000, withdrawalRateAnnual: 0.04 });
+    const s = autoAllocateBudget(p, scenario());
+    expect(s.budget.annualReturnTravel).toBeGreaterThan(0);
+    expect(citySpending(p, s)!.total).toBeCloseTo(7000, 6);
+    const reduced = autoAllocateBudget({ ...p, withdrawalRateAnnual: 0.02 }, s);
+    expect(citySpending({ ...p, withdrawalRateAnnual: 0.02 }, reduced)!.total).toBeCloseTo(4000, 6);
+    expect(reduced.budget.annualReturnTravel / s.budget.annualReturnTravel).toBeCloseTo(4 / 7, 6);
+    expect(autoAllocateBudget(p, s)).toBe(s);
+  });
+  test("manual edits, including zero travel, are preserved", () => {
+    const s = scenario({ autoAllocate: false });
+    const p = profile({ accessibleFunds: 1800000, withdrawalRateAnnual: 0.04 });
+    expect(autoAllocateBudget(p, s)).toBe(s);
+    expect(
+      autoAllocateBudget({ ...p, withdrawalRateAnnual: 0.08 }, s).budget.annualReturnTravel,
+    ).toBe(0);
+    expect(
+      autoAllocateBudget(p, { ...s, autoAllocate: true }).budget.annualReturnTravel,
+    ).toBeGreaterThan(0);
+  });
+  test("annual travel is counted once and setup funds stay separate", () => {
+    const p = profile({ accessibleFunds: 1800000, withdrawalRateAnnual: 0.04 });
+    const s = autoAllocateBudget(p, scenario({ movingSetupCost: 10000, rentalDeposit: 2000 }));
+    const spending = citySpending(p, s)!;
+    expect(spending.lines.find((x) => x.key === "annualReturnTravel")!.amount).toBeCloseTo(
+      s.budget.annualReturnTravel / 12,
+      6,
+    );
+    expect(spending.total).toBeCloseTo(spending.available, 6);
+    expect(s.movingSetupCost).toBe(10000);
+    expect(s.rentalDeposit).toBe(2000);
+  });
+  test("existing plans gain automatic mode without losing their saved profile", () => {
+    const plan = makePlan({
+      profile: profile({ accessibleFunds: 1800000, withdrawalRateAnnual: 0.04 }),
+      scenarios: [],
+      draft: scenario(),
+    });
+    const raw = JSON.parse(exportPlanJson(plan));
+    delete raw.draft.autoAllocate;
+    const loaded = importPlanJson(JSON.stringify(raw))!;
+    expect(loaded.draft!.autoAllocate).toBe(true);
+    expect(
+      autoAllocateBudget(loaded.profile, loaded.draft!).budget.annualReturnTravel,
+    ).toBeGreaterThan(0);
+    expect(loaded.profile.accessibleFunds).toBe(1800000);
+  });
+});
