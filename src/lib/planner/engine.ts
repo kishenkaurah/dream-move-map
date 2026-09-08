@@ -4,6 +4,7 @@
  * A first unfunded expense is recorded permanently; later income cannot erase it.
  */
 import type { BudgetItems, CityScenario, HouseholdProfile } from "./types";
+import { savingsAtMove } from "./spending";
 import { fxStressMultiplier } from "./fx";
 import { profileSchema, scenarioSchema } from "./storage";
 
@@ -24,6 +25,8 @@ export interface YearPoint {
 }
 export interface EngineResult {
   monthlyIncomeAtMove: number;
+  monthlySavingsAllowanceAtMove: number;
+  monthlySpendingPowerAtMove: number;
   monthlySpendingAtMove: number;
   monthlySurplusAtMove: number;
   monthlyGapAtMove: number;
@@ -87,6 +90,8 @@ export function validateProfile(p: HouseholdProfile): string[] {
 }
 const emptyResult = (errors: string[]): EngineResult => ({
   monthlyIncomeAtMove: 0,
+  monthlySavingsAllowanceAtMove: 0,
+  monthlySpendingPowerAtMove: 0,
   monthlySpendingAtMove: 0,
   monthlySurplusAtMove: 0,
   monthlyGapAtMove: 0,
@@ -205,6 +210,12 @@ export function runProjection({ profile: p, scenario: s, usdRate }: EngineInput)
   result.setupCost = round2(s.movingSetupCost * usdRate * fx);
   result.restrictedAtMove = round2((s.rentalDeposit + (s.visaFundsReserve ?? 0)) * usdRate * fx);
   result.monthlyIncomeAtMove = round2(incomeAt(moveAge));
+  result.monthlySavingsAllowanceAtMove = round2(savingsAtMove({ ...p, usdRate }, s)?.monthly ?? 0);
+  result.monthlySpendingPowerAtMove = round2(
+    incomeAt(moveAge) + result.monthlySavingsAllowanceAtMove,
+  );
+  // The allowance is a spending guide, never a deposit of new money. The loop
+  // below deducts actual spending minus external income from balances exactly once.
   result.monthlySpendingAtMove = round2(overseas + homeCosts);
   const net = incomeAt(moveAge) - overseas - homeCosts;
   result.monthlySurplusAtMove = round2(Math.max(net, 0));

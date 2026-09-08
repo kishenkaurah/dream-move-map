@@ -5,7 +5,7 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import { NumberField, ChoiceField, CheckField } from "./fields";
-import type { HouseholdProfile } from "@/lib/planner/types";
+import type { HouseholdProfile, CityScenario } from "@/lib/planner/types";
 import { formatExact } from "@/lib/planner/fx";
 import { incomeAtMove } from "@/lib/planner/spending";
 import { changeProfileCurrency } from "@/lib/planner/quiz-bridge";
@@ -13,15 +13,17 @@ import { changeProfileCurrency } from "@/lib/planner/quiz-bridge";
 const requiredNumber = (n: number | null) => n ?? Number.NaN;
 export function ProfileForm({
   profile: p,
+  scenario,
   onChange,
 }: {
   profile: HouseholdProfile;
+  scenario?: CityScenario | null;
   onChange: (p: HouseholdProfile) => void;
 }) {
   const set = (patch: Partial<HouseholdProfile>) =>
     onChange({ ...p, ...patch, confirmedByUser: false });
   const unit = p.currency;
-  const summary = incomeAtMove(p);
+  const summary = incomeAtMove(p, scenario);
   const validIncome = summary !== null;
   const { rent = 0, later = 0, income = 0, homeCosts = 0 } = summary ?? {};
   const money = (value: number) => formatExact(value, p.currency);
@@ -107,6 +109,24 @@ export function ProfileForm({
           onChange={(v) => set({ retirementFunds: v })}
           unit={unit}
         />
+      </div>
+      <div className="space-y-3 rounded-xl border p-4">
+        <NumberField
+          label="Annual savings withdrawal allowance"
+          unit="%"
+          value={(p.withdrawalRateAnnual ?? 0.04) * 100}
+          min={0}
+          max={20}
+          onChange={(v) => set({ withdrawalRateAnnual: requiredNumber(v) / 100 })}
+          hint="Starts at 4% of funds available at your move, after entered setup costs and deposits. This adds to your spending power and is separate from investment returns. Set 0 to exclude it."
+        />
+        {summary?.savings && (
+          <p className="text-sm">
+            On today's accessible savings: {money(summary.savings.todayMonthly)} {unit} / month. At
+            your move: {money(summary.savingsMonthly)} {unit} / month, based on projected available
+            funds of {money(summary.savings.base)}.
+          </p>
+        )}
       </div>
       {(p.retirementFunds ?? 0) > 0 && (
         <div className="space-y-4 rounded-xl border p-4">
@@ -231,7 +251,7 @@ export function ProfileForm({
               min={-90}
               max={50}
               onChange={(v) => set({ returnRateAnnual: requiredNumber(v) / 100 })}
-              hint="The editable 3% starting assumption applies to both cash/investments and retirement funds after fees and tax, before inflation. With 3% inflation, that means no growth in purchasing power. It is not a forecast for your investments. Actual returns vary."
+              hint="The editable return assumption applies to both cash/investments and retirement funds after fees and tax, before inflation. New plans start at 7% return and 3% inflation; your saved assumptions are kept. It is not a forecast for your investments. Actual returns vary."
             />
             <NumberField
               label="Annual expense inflation"
@@ -255,9 +275,9 @@ export function ProfileForm({
       </Accordion>
       <section
         className="space-y-3 rounded-xl border bg-secondary/50 p-4"
-        aria-label="Monthly income available at your move"
+        aria-label="Monthly spending power at your move"
       >
-        <h3 className="text-base font-semibold">Monthly income available at your move</h3>
+        <h3 className="text-base font-semibold">Monthly spending power at your move</h3>
         {validIncome ? (
           <>
             <dl className="space-y-2 text-sm">
@@ -286,15 +306,23 @@ export function ProfileForm({
                 <dd>{money(homeCosts)}</dd>
               </div>
             </dl>
+            <div className="flex justify-between gap-4 text-sm">
+              <span>
+                Savings withdrawal allowance ({((p.withdrawalRateAnnual ?? 0.04) * 100).toFixed(1)}%
+                a year)
+              </span>
+              <span>
+                {summary.savings ? money(summary.savingsMonthly) : "Enter valid savings inputs"}
+              </span>
+            </div>
             <div className="border-t pt-3">
               <p className="text-sm">
-                {income - homeCosts >= 0
-                  ? "Income available for life abroad"
+                {summary.available >= 0
+                  ? "Total available for life abroad, including savings"
                   : "Monthly shortfall before overseas costs"}
               </p>
               <p className="display mt-1 text-2xl">
-                {money(Math.abs(income - homeCosts))}{" "}
-                <span className="text-sm">{unit} / month</span>
+                {money(Math.abs(summary.available))} <span className="text-sm">{unit} / month</span>
               </p>
             </div>
           </>
@@ -311,9 +339,20 @@ export function ProfileForm({
           </p>
         )}
         <p className="text-sm text-muted-foreground">
-          Before overseas living costs. Investment growth, savings withdrawals and home-sale
-          proceeds are handled separately in the projection. Home expenses include inflation up to
-          the move.
+          Before overseas living costs. The savings allowance uses your projected funds at the move,
+          including net sale proceeds and retirement funds confirmed accessible then, less entered
+          setup costs and deposits. Actual spending from savings reduces your balances; unused
+          allowance stays invested. Withdrawal taxes are not calculated. The 4% allowance is a
+          planning assumption, not guaranteed income.{" "}
+          <a
+            className="underline"
+            target="_blank"
+            rel="noreferrer"
+            href="https://www.schwab.com/learn/story/beyond-4-rule-how-much-can-you-spend-retirement"
+          >
+            About the 4% guideline
+          </a>
+          .
         </p>
         {p.prefilledFromQuiz && !p.confirmedByUser && (
           <p className="text-sm text-muted-foreground">

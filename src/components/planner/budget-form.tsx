@@ -58,7 +58,7 @@ export function BudgetForm({
           <>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <p className="text-sm">Income available after home expenses</p>
+                <p className="text-sm">Spending power including savings, after home expenses</p>
                 <p className="display text-2xl">
                   {money(spending.available)}
                   <span className="text-sm"> / month</span>
@@ -84,8 +84,8 @@ export function BudgetForm({
               className={remaining! < 0 ? "font-semibold text-destructive" : "font-semibold"}
             >
               {remaining! < 0
-                ? `${money(-remaining!)} per month needed from savings`
-                : `${money(remaining!)} per month left to allocate or save`}
+                ? `${money(-remaining!)} per month above your income and savings allowance`
+                : `${money(remaining!)} per month of spending power unallocated`}
             </p>
             {allocation && (
               <div className="space-y-2 rounded-lg border bg-background p-3">
@@ -126,14 +126,16 @@ export function BudgetForm({
             </details>
             <p className="text-sm text-muted-foreground">
               {spending.housingLimitToday >= 0
-                ? `Keeping all other choices, income could cover up to ${money(spending.housingLimitToday)} per month in the housing field below.`
+                ? `Keeping all other choices, income and the savings allowance could cover up to ${money(spending.housingLimitToday)} per month in the housing field below.`
                 : "Other costs already exceed available income, even before housing."}{" "}
               This is a spending limit, not a rental-price estimate.
             </p>
             <p className="text-sm text-muted-foreground">
               Totals are in {p.currency} at your move date, including inflation, contingency and
-              your stress settings. Edit the allowances below to see the trade-offs. The savings
-              projection checks how withdrawals affect your balances over time.
+              your stress settings. Edit the allowances below to see the trade-offs. The total
+              includes {money(spending.savingsMonthly)} per month from your savings allowance.
+              Unused allowance stays invested. The projection deducts actual spending above
+              recurring income from savings.
             </p>
             {p.prefilledFromQuiz && !p.confirmedByUser && (
               <p className="text-sm text-muted-foreground">

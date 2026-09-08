@@ -427,7 +427,7 @@ function PlannerPage() {
                       1. Your financial profile
                     </AccordionTrigger>
                     <AccordionContent className="pb-6">
-                      <ProfileForm profile={profile} onChange={updateProfile} />
+                      <ProfileForm profile={profile} scenario={scenario} onChange={updateProfile} />
                     </AccordionContent>
                   </AccordionItem>
                   {scenario && (
@@ -612,8 +612,18 @@ function PlannerPage() {
                           (r: ReturnType<typeof runProjection>) => money(r.monthlySpendingAtMove),
                         ],
                         [
-                          "Monthly income at move",
+                          "Recurring income at move",
                           (r: ReturnType<typeof runProjection>) => money(r.monthlyIncomeAtMove),
+                        ],
+                        [
+                          "Savings allowance / month",
+                          (r: ReturnType<typeof runProjection>) =>
+                            money(r.monthlySavingsAllowanceAtMove),
+                        ],
+                        [
+                          "Total spending power / month",
+                          (r: ReturnType<typeof runProjection>) =>
+                            money(r.monthlySpendingPowerAtMove),
                         ],
                         [
                           "Needed from savings / month",

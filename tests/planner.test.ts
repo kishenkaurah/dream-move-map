@@ -27,6 +27,7 @@ const profile = (patch: Partial<HouseholdProfile> = {}): HouseholdProfile => ({
   retirementFunds: 0,
   monthlyIncomeNow: 1000,
   returnRateAnnual: 0,
+  withdrawalRateAnnual: 0,
   inflationAnnual: 0,
   horizonYears: 2,
   confirmedByUser: true,
@@ -436,5 +437,86 @@ describe("surplus allocation and rental searches", () => {
     expect(propertySearch("bangkok", NaN)).toBeNull();
     expect(propertySearch("bangkok", 1000, NaN)).toBeNull();
     expect(propertySearch("bangkok", 1000, 0)).toBeNull();
+  });
+});
+
+describe("savings as spending power", () => {
+  test("1.8m at 4% adds 6000 monthly to recurring income", () => {
+    const p = profile({ accessibleFunds: 1800000, withdrawalRateAnnual: 0.04 });
+    const summary = incomeAtMove(p)!;
+    expect(summary.savingsMonthly).toBe(6000);
+    expect(summary.available).toBe(7000);
+    expect(summary.income).toBe(1000);
+  });
+  test("future move compounds savings and contributions before calculating the allowance", () => {
+    const p = profile({
+      currentAge: 38,
+      moveAge: 45,
+      horizonYears: 60,
+      accessibleFunds: 1800000,
+      withdrawalRateAnnual: 0.04,
+      returnRateAnnual: 0.07,
+      preMoveMonthlySaving: 500,
+    });
+    const s = scenario();
+    const summary = incomeAtMove(p, s)!;
+    const result = runProjection({ profile: p, scenario: s, usdRate: 1 });
+    expect(summary.savings!.todayMonthly).toBe(6000);
+    expect(summary.savings!.base).toBeCloseTo(result.accessibleAtMove, 2);
+    expect(summary.savingsMonthly).toBeCloseTo((result.accessibleAtMove * 0.04) / 12, 2);
+    expect(summary.savingsMonthly).toBeGreaterThan(6000);
+  });
+  test("allocated withdrawals reduce principal exactly once, unused allowance stays invested", () => {
+    const p = profile({ accessibleFunds: 1800000, withdrawalRateAnnual: 0.04, horizonYears: 1 });
+    const s = allocateSurplus(p, scenario())!;
+    const result = runProjection({ profile: p, scenario: s, usdRate: 1 });
+    expect(citySpending(p, s)!.remaining).toBeCloseTo(0, 6);
+    expect(result.monthlySpendingPowerAtMove).toBe(7000);
+    expect(result.monthlyGapAtMove).toBe(6000);
+    expect(result.finalAccessible).toBe(1728000);
+    const lowerSpending = runProjection({ profile: p, scenario: scenario(), usdRate: 1 });
+    expect(lowerSpending.finalAccessible).toBe(1788000);
+  });
+  test("locked super stays excluded and setup/deposits reduce the base without doubling sales", () => {
+    const p = profile({
+      accessibleFunds: 100000,
+      retirementFunds: 300000,
+      retirementAccessAge: 61,
+      retirementAccessConfirmed: true,
+      homeProperty: "sell",
+      netSaleProceeds: 200000,
+      withdrawalRateAnnual: 0.04,
+    });
+    const s = scenario({ movingSetupCost: 10000, rentalDeposit: 20000, visaFundsReserve: 30000 });
+    expect(incomeAtMove(p, s)!.savings!.base).toBe(240000);
+    expect(incomeAtMove({ ...p, retirementAccessAge: 60 }, s)!.savings!.base).toBe(540000);
+    expect(
+      incomeAtMove({ ...p, retirementAccessAge: 60, retirementAccessConfirmed: false }, s)!.savings!
+        .base,
+    ).toBe(240000);
+  });
+  test("legacy saved plans receive 4% without losing amounts or existing return assumptions", () => {
+    const plan = makePlan({
+      profile: profile({ accessibleFunds: 1800000, returnRateAnnual: 0.03 }),
+      scenarios: [],
+      draft: scenario(),
+    });
+    const raw = JSON.parse(exportPlanJson(plan));
+    delete raw.profile.withdrawalRateAnnual;
+    const imported = importPlanJson(JSON.stringify(raw))!;
+    expect(imported.profile.withdrawalRateAnnual).toBe(0.04);
+    expect(imported.profile.accessibleFunds).toBe(1800000);
+    expect(imported.profile.returnRateAnnual).toBe(0.03);
+    raw.profile.withdrawalRateAnnual = -0.04;
+    expect(importPlanJson(JSON.stringify(raw))).toBeNull();
+  });
+  test("unknown savings and invalid rates do not create a withdrawal allowance", () => {
+    expect(
+      incomeAtMove(profile({ accessibleFunds: null, withdrawalRateAnnual: 0.04 }))!.savings,
+    ).toBeNull();
+    expect(incomeAtMove(profile({ withdrawalRateAnnual: NaN }))!.savings).toBeNull();
+    expect(
+      incomeAtMove(profile({ accessibleFunds: 0, withdrawalRateAnnual: 0.04 }))!.savingsMonthly,
+    ).toBe(0);
   });
 });

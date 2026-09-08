@@ -67,6 +67,8 @@ export interface HouseholdProfile {
 
   /** Nominal annual return after fees and tax. May be negative. */
   returnRateAnnual: number;
+  /** Initial annual savings withdrawal allowance, separate from investment return. */
+  withdrawalRateAnnual: number;
   /** Annual inflation applied to living costs. */
   inflationAnnual: number;
 

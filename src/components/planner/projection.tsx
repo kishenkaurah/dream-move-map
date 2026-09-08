@@ -49,7 +49,15 @@ export function ProjectionView({
           }
           value={money(r.monthlyGapAtMove || r.monthlySurplusAtMove)}
         />
-        <Metric label="Monthly income at move" value={money(r.monthlyIncomeAtMove)} />
+        <Metric label="Recurring income at move" value={money(r.monthlyIncomeAtMove)} />
+        <Metric
+          label="Monthly savings allowance at move"
+          value={money(r.monthlySavingsAllowanceAtMove)}
+        />
+        <Metric
+          label="Total monthly spending power before home expenses"
+          value={money(r.monthlySpendingPowerAtMove)}
+        />
         <Metric label="One-off setup expenses" value={money(r.setupCost)} />
         <Metric label="Deposits and visa funds required" value={money(r.restrictedAtMove)} />
         <Metric
