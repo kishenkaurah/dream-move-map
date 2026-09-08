@@ -299,3 +299,65 @@ describe("saved plans and quiz handoff", () => {
     expect(matches.some((m) => m.destination.country === "Portugal")).toBe(false);
   });
 });
+
+import { citySpending, incomeAtMove } from "../src/lib/planner/spending";
+describe("income connected to city spending", () => {
+  test("matches projection income and deficit with future inflation and stress", () => {
+    const p = profile({
+      moveAge: 61,
+      horizonYears: 4,
+      monthlyIncomeNow: 2400,
+      homeProperty: "rent",
+      netRentMonthly: -100,
+      ongoingHomeExpensesMonthly: 200,
+      inflationAnnual: 0.03,
+      laterIncomeMonthly: 300,
+      laterIncomeStartAge: 61,
+      laterIncomeConfirmed: true,
+      usdRate: 1.52,
+    });
+    const s = scenario({ fxStressPct: 15, expenseStressPct: 10, lifestyleAdjustPct: 5 });
+    const budget = citySpending(p, s)!;
+    const result = runProjection({ profile: p, scenario: s, usdRate: p.usdRate });
+    expect(budget.income).toBeCloseTo(result.monthlyIncomeAtMove, 2);
+    expect(budget.total + budget.homeCosts).toBeCloseTo(result.monthlySpendingAtMove, 2);
+    expect(-budget.remaining).toBeCloseTo(result.monthlyGapAtMove, 2);
+  });
+  test("housing headroom balances income, accounting for annual travel and contingency", () => {
+    const p = profile({
+      monthlyIncomeNow: 3000,
+      ongoingHomeExpensesMonthly: 200,
+      moveAge: 61,
+      inflationAnnual: 0.03,
+    });
+    const s = scenario();
+    s.budget.annualReturnTravel = 2400;
+    s.budget.contingencyPct = 10;
+    s.fxStressPct = 20;
+    const limit = citySpending(p, s)!.housingLimitToday;
+    s.budget.housing = limit / p.usdRate;
+    expect(citySpending(p, s)!.remaining).toBeCloseTo(0, 6);
+    s.budget.groceriesDining = 100;
+    expect(citySpending(p, s)!.housingLimitToday).toBeCloseTo(limit - 100, 6);
+  });
+  test("unknown income is not zero and unconfirmed future income is excluded", () => {
+    expect(incomeAtMove(profile({ monthlyIncomeNow: null }))).toBeNull();
+    expect(citySpending(profile(), scenario({ fxStressPct: NaN }))).toBeNull();
+    expect(
+      incomeAtMove(
+        profile({ laterIncomeMonthly: 2000, laterIncomeStartAge: 60, laterIncomeConfirmed: false }),
+      )!.income,
+    ).toBe(1000);
+    expect(
+      incomeAtMove(
+        profile({ laterIncomeMonthly: 2000, laterIncomeStartAge: 61, laterIncomeConfirmed: true }),
+      )!.income,
+    ).toBe(1000);
+  });
+  test("zero income and negative rental cashflow show the full shortfall", () => {
+    const p = profile({ monthlyIncomeNow: 0, homeProperty: "rent", netRentMonthly: -100 });
+    const b = citySpending(p, scenario())!;
+    expect(b.remaining).toBe(-2100);
+    expect(b.housingLimitToday).toBe(-100);
+  });
+});

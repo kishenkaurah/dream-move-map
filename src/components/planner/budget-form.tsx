@@ -6,6 +6,9 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { BUDGET_LABELS, adapterFor, cityById, homeCountryLinks } from "@/lib/planner/city-adapters";
+import { citySpending } from "@/lib/planner/spending";
+import { formatExact } from "@/lib/planner/fx";
+import { Progress } from "@/components/ui/progress";
 import { NumberField } from "./fields";
 import type { BudgetItems, CityScenario, HouseholdProfile } from "@/lib/planner/types";
 
@@ -22,6 +25,8 @@ export function BudgetForm({
 }) {
   const city = cityById(s.cityId)!;
   const adapter = adapterFor(city.country);
+  const spending = citySpending(p, s);
+  const money = (value: number) => formatExact(value, p.currency);
   const rate = p.usdRate;
   const usableRate = Number.isFinite(rate) && rate > 0;
   const set = (patch: Partial<CityScenario>) => onChange({ ...s, ...patch });
@@ -41,6 +46,91 @@ export function BudgetForm({
           Reset city allowances
         </Button>
       </div>
+      <section
+        className="space-y-3 rounded-xl border bg-secondary/50 p-4"
+        aria-label="Your city budget and available income"
+      >
+        <h3 className="text-base font-semibold">How your income covers life in {city.name}</h3>
+        {spending ? (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <p className="text-sm">Income available after home expenses</p>
+                <p className="display text-2xl">
+                  {money(spending.available)}
+                  <span className="text-sm"> / month</span>
+                </p>
+              </div>
+              <div>
+                <p className="text-sm">Your city budget at move</p>
+                <p className="display text-2xl">
+                  {money(spending.total)}
+                  <span className="text-sm"> / month</span>
+                </p>
+              </div>
+            </div>
+            {spending.available > 0 && (
+              <Progress
+                value={Math.min(100, (spending.total / spending.available) * 100)}
+                aria-label="Share of available income allocated to city costs"
+                aria-valuetext={`${Math.round((spending.total / spending.available) * 100)}% of available income allocated`}
+              />
+            )}
+            <p
+              role="status"
+              className={
+                spending.remaining < 0 ? "font-semibold text-destructive" : "font-semibold"
+              }
+            >
+              {spending.remaining < 0
+                ? `${money(-spending.remaining)} per month needed from savings`
+                : `${money(spending.remaining)} per month left to allocate or save`}
+            </p>
+            <details>
+              <summary className="cursor-pointer text-sm font-medium">
+                Where your monthly budget goes
+              </summary>
+              <dl className="mt-3 space-y-2 text-sm">
+                {spending.lines.map((line) => (
+                  <div key={line.key} className="flex justify-between gap-3">
+                    <dt>
+                      {line.key === "annualReturnTravel"
+                        ? "Flights home (monthly allowance)"
+                        : BUDGET_LABELS[line.key as keyof typeof BUDGET_LABELS]}
+                    </dt>
+                    <dd className="shrink-0 tabular-nums">{money(line.amount)}</dd>
+                  </div>
+                ))}
+                <div className="flex justify-between gap-3">
+                  <dt>Contingency</dt>
+                  <dd>{money(spending.contingency)}</dd>
+                </div>
+              </dl>
+            </details>
+            <p className="text-sm text-muted-foreground">
+              {spending.housingLimitToday >= 0
+                ? `Keeping all other choices, income could cover up to ${money(spending.housingLimitToday)} per month in the housing field below.`
+                : "Other costs already exceed available income, even before housing."}{" "}
+              This is a spending limit, not a rental-price estimate.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Totals are in {p.currency} at your move date, including inflation, contingency and
+              your stress settings. Edit the allowances below to see the trade-offs. The savings
+              projection checks how withdrawals affect your balances over time.
+            </p>
+            {p.prefilledFromQuiz && !p.confirmedByUser && (
+              <p className="text-sm text-muted-foreground">
+                Income is still an unconfirmed estimate from your quiz.
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Complete your age, move age and income in the financial profile, and correct any invalid
+            budget inputs, to connect your available income to these city costs.
+          </p>
+        )}
+      </section>
       {!usableRate && (
         <p role="alert" className="text-sm text-destructive">
           Correct the exchange rate in your financial profile before editing costs.

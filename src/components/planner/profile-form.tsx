@@ -7,7 +7,7 @@ import {
 import { NumberField, ChoiceField, CheckField } from "./fields";
 import type { HouseholdProfile } from "@/lib/planner/types";
 import { formatExact } from "@/lib/planner/fx";
-import { profileSchema } from "@/lib/planner/storage";
+import { incomeAtMove } from "@/lib/planner/spending";
 import { changeProfileCurrency } from "@/lib/planner/quiz-bridge";
 
 const requiredNumber = (n: number | null) => n ?? Number.NaN;
@@ -21,37 +21,9 @@ export function ProfileForm({
   const set = (patch: Partial<HouseholdProfile>) =>
     onChange({ ...p, ...patch, confirmedByUser: false });
   const unit = p.currency;
-  const validIncome =
-    profileSchema
-      .pick({
-        monthlyIncomeNow: true,
-        currentAge: true,
-        moveAge: true,
-        homeProperty: true,
-        netRentMonthly: true,
-        laterIncomeMonthly: true,
-        laterIncomeStartAge: true,
-        laterIncomeConfirmed: true,
-        ongoingHomeExpensesMonthly: true,
-        inflationAnnual: true,
-      })
-      .safeParse(p).success &&
-    p.monthlyIncomeNow !== null &&
-    p.currentAge !== null &&
-    p.moveAge !== null &&
-    p.moveAge >= p.currentAge;
-  const moveMonths = Math.round(((p.moveAge ?? 0) - (p.currentAge ?? 0)) * 12);
-  const ageAtMove = (p.currentAge ?? 0) + moveMonths / 12;
-  const rent = p.homeProperty === "rent" ? p.netRentMonthly : 0;
-  const later =
-    p.laterIncomeConfirmed &&
-    p.laterIncomeStartAge !== null &&
-    p.laterIncomeStartAge <= ageAtMove + 1e-9
-      ? p.laterIncomeMonthly
-      : 0;
-  const income = (p.monthlyIncomeNow ?? 0) + rent + later;
-  const homeCosts =
-    p.ongoingHomeExpensesMonthly * Math.pow(Math.pow(1 + p.inflationAnnual, 1 / 12), moveMonths);
+  const summary = incomeAtMove(p);
+  const validIncome = summary !== null;
+  const { rent = 0, later = 0, income = 0, homeCosts = 0 } = summary ?? {};
   const money = (value: number) => formatExact(value, p.currency);
 
   return (
