@@ -1,12 +1,9 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { NumberField, ChoiceField } from "./fields";
+import { ChoiceField } from "./fields";
 import { propertySearch } from "@/lib/planner/property-search";
 import { cityById, adapterFor } from "@/lib/planner/city-adapters";
-import { LOCAL_RATES, formatExact } from "@/lib/planner/fx";
-import { scenarioSchema } from "@/lib/planner/storage";
+import { LOCAL_RATES } from "@/lib/planner/fx";
 import type { HouseholdProfile, CityScenario } from "@/lib/planner/types";
-
 export function HousingSearch({
   scenario: s,
   profile: p,
@@ -18,32 +15,18 @@ export function HousingSearch({
 }) {
   const city = cityById(s.cityId)!;
   const currency = adapterFor(city.country).localCurrency;
-  const [rateOverride, setRateOverride] = useState<number | null>(null);
-  const [copyResult, setCopyResult] = useState<{ maximum: number; message: string } | null>(null);
   if (!currency) return null;
-  const rate = rateOverride ?? (p.currency === currency ? p.usdRate : LOCAL_RATES[currency]);
   const bedrooms = s.rentalBedrooms ?? (p.household === "family" ? 2 : 1);
-  const housing = s.budget.housing * (1 + s.lifestyleAdjustPct / 100);
-  const search =
-    scenarioSchema.safeParse(s).success &&
-    Number.isFinite(p.usdRate) &&
-    p.usdRate >= 0.0001 &&
-    p.usdRate <= 10000
-      ? propertySearch(s.cityId, housing, rate, bedrooms)
-      : null;
+  const search = propertySearch(
+    s.cityId,
+    s.budget.housing * (1 + s.lifestyleAdjustPct / 100),
+    p.currency === currency ? p.usdRate : LOCAL_RATES[currency],
+    bedrooms,
+  );
   return (
-    <section
-      className="space-y-4 rounded-xl border bg-secondary/40 p-4"
-      aria-label="Explore homes within your housing allowance"
-    >
-      <div>
-        <h3 className="text-base font-semibold">Find rentals in {city.name}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Explore homes in {city.name}, then adjust your allowance using actual asking rents.
-        </p>
-      </div>
+    <div className="space-y-3 rounded-lg bg-secondary/50 p-3">
       <ChoiceField
-        label="Bedrooms to search for"
+        label="Bedrooms"
         value={String(bedrooms)}
         choices={[
           ["1", "1 bedroom"],
@@ -53,106 +36,24 @@ export function HousingSearch({
         ]}
         onChange={(v) => onChange({ ...s, rentalBedrooms: Number(v) })}
       />
-      <p className="text-sm text-muted-foreground">
-        Starts at 1 bedroom for one or two adults, or 2 for a household with children. Change it to
-        suit your household. This selects homes; it does not change your housing allowance.
-      </p>
-      {search ? (
+      {search && (
         <>
-          <p className="display text-2xl">
-            {new Intl.NumberFormat("en").format(search.maximum)} {currency}
-            <span className="text-sm"> / month</span>
-          </p>
-          <p className="text-sm">
-            About {formatExact(housing * p.usdRate, p.currency)} {p.currency} at today's prices,
-            including your lifestyle adjustment. This is the full housing allowance; allow room for
-            housing charges not included in rent.
-          </p>
-          <div className="space-y-3 rounded-lg border bg-background p-3">
-            <p className="text-sm font-medium">
-              1. Copy your maximum monthly rent: {search.maximum.toLocaleString("en")} {currency}
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(String(search.maximum));
-                  setCopyResult({
-                    maximum: search.maximum,
-                    message:
-                      "Rent cap copied. Paste it into the maximum-price filter on the property site.",
-                  });
-                } catch {
-                  setCopyResult({
-                    maximum: search.maximum,
-                    message: `Copy is unavailable in this browser. Enter ${search.maximum.toLocaleString("en")} manually in the maximum-price filter.`,
-                  });
-                }
-              }}
-            >
-              Copy rent cap
-            </Button>
-            {copyResult?.maximum === search.maximum && (
-              <p role="status" className="text-sm">
-                {copyResult.message}
-              </p>
-            )}
-            <p className="text-sm font-medium">
-              {search.priceFilter
-                ? "Open results with your rent cap and bedroom count applied"
-                : `Open listings, then set ${bedrooms} bedrooms and your maximum rent`}
-            </p>
-            <Button asChild variant="outline" className="h-auto w-full whitespace-normal">
-              <a href={search.url} target="_blank" rel="noopener noreferrer">
-                {search.priceFilter
-                  ? `Find ${bedrooms}-bedroom homes up to ${search.maximum.toLocaleString("en")} ${currency} / month`
-                  : `Open ${city.name} rentals on ${search.provider}`}{" "}
-                ↗
-              </a>
-            </Button>
-            {s.cityId === "bangkok" && (
-              <a
-                className="block text-sm text-primary underline"
-                href="https://www.fazwaz.com/property-for-rent/thailand/bangkok"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Also browse Bangkok rentals on FazWaz ↗
-              </a>
-            )}
-            <a href={search.url} className="block text-sm text-primary underline">
-              If no new tab opens, open listings in this tab
+          <Button asChild variant="outline" className="h-auto w-full whitespace-normal">
+            <a href={search.url} target="_blank" rel="noopener noreferrer">
+              See homes for {search.maximum.toLocaleString("en")} {currency} / month ↗
             </a>
-          </div>
-          <p className="text-sm text-muted-foreground">
+          </Button>
+          <p className="text-xs text-muted-foreground">
             {search.priceFilter
-              ? "The Bangkok link applies your maximum monthly rent and exact bedroom count. Results can include condos, apartments and houses."
-              : "This city's link opens area listings; apply the bedroom and price filters on the property site."}{" "}
-            Results open on the property site. Check the selected filters, neighbourhood, lease
-            length and availability. Keep room for charges outside rent.
+              ? "Opens Bangkok listings with your price and bedroom filters."
+              : `Set ${bedrooms} bedrooms and a ${search.maximum.toLocaleString("en")} ${currency} cap on ${search.provider}.`}{" "}
+            Exchange rate is indicative.
           </p>
+          <a href={search.url} className="text-xs underline">
+            Open in this tab instead
+          </a>
         </>
-      ) : (
-        <p className="text-sm">
-          Enter a positive housing allowance and valid exchange rate to see rental searches.
-        </p>
       )}
-      <details>
-        <summary className="cursor-pointer text-sm font-medium">
-          Rental-search exchange rate
-        </summary>
-        <div className="mt-3">
-          <NumberField
-            label={`1 USD equals how many ${currency}?`}
-            value={rate}
-            min={0.0001}
-            max={10000}
-            onChange={(v) => setRateOverride(v ?? Number.NaN)}
-            hint="Indicative model rate, not live. This changes the rental-search conversion only. Future inflation, contingency and stress buffers are not added to today's search ceiling."
-          />
-        </div>
-      </details>
-    </section>
+    </div>
   );
 }

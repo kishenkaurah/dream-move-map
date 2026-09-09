@@ -74,17 +74,28 @@ export function validateProfile(p: HouseholdProfile): string[] {
     ["your retirement fund balance (enter 0 if none)", p.retirementFunds],
     ["your after-tax monthly income (enter 0 if none)", p.monthlyIncomeNow],
   ] as const) {
-    if (value === null) errors.push(`Enter ${label}.`);
+    if (value === null && !(p.budgetBasis === "today" && label.includes("age")))
+      errors.push(`Enter ${label}.`);
   }
-  if (p.currentAge !== null && p.moveAge !== null) {
+  if (p.budgetBasis !== "today" && p.currentAge !== null && p.moveAge !== null) {
     if (p.moveAge < p.currentAge)
       errors.push("Your move age cannot be earlier than your current age.");
     if (p.moveAge >= p.currentAge + p.horizonYears)
       errors.push("Extend the projection horizon beyond your move age.");
   }
-  if ((p.retirementFunds ?? 0) > 0 && p.retirementAccessConfirmed && p.retirementAccessAge === null)
+  if (
+    p.budgetBasis !== "today" &&
+    (p.retirementFunds ?? 0) > 0 &&
+    p.retirementAccessConfirmed &&
+    p.retirementAccessAge === null
+  )
     errors.push("Enter the confirmed retirement fund access age.");
-  if (p.laterIncomeMonthly > 0 && p.laterIncomeConfirmed && p.laterIncomeStartAge === null)
+  if (
+    p.budgetBasis !== "today" &&
+    p.laterIncomeMonthly > 0 &&
+    p.laterIncomeConfirmed &&
+    p.laterIncomeStartAge === null
+  )
     errors.push("Enter the confirmed later-income start age.");
   return errors;
 }
@@ -120,7 +131,7 @@ export function runProjection({ profile: p, scenario: s, usdRate }: EngineInput)
   if (errors.length) return emptyResult(errors);
   const result = emptyResult([]);
   const { unknowns } = result;
-  if (!p.confirmedByUser)
+  if (p.budgetBasis !== "today" && !p.confirmedByUser)
     unknowns.push(
       p.prefilledFromQuiz
         ? "Income was estimated from your quiz bracket. Confirm your actual figures."
@@ -128,12 +139,10 @@ export function runProjection({ profile: p, scenario: s, usdRate }: EngineInput)
     );
   if (
     (p.retirementFunds ?? 0) > 0 &&
-    (!p.retirementAccessConfirmed || p.retirementAccessAge === null)
+    (!p.retirementAccessConfirmed || (p.budgetBasis !== "today" && p.retirementAccessAge === null))
   )
-    unknowns.push(
-      "Retirement funds are excluded from withdrawals until you confirm their access age.",
-    );
-  if (p.laterIncomeMonthly > 0 && !p.laterIncomeConfirmed)
+    unknowns.push("Retirement funds marked unavailable are excluded from spending.");
+  if (p.budgetBasis !== "today" && p.laterIncomeMonthly > 0 && !p.laterIncomeConfirmed)
     unknowns.push(
       "Unconfirmed later income is excluded. Check its amount, start age and overseas eligibility.",
     );
@@ -151,8 +160,8 @@ export function runProjection({ profile: p, scenario: s, usdRate }: EngineInput)
     "Healthcare and housing start as model allowances. Replace them with quotes for your situation.",
   );
 
-  const ageNow = p.currentAge!;
-  const moveMonths = Math.round((p.moveAge! - ageNow) * 12);
+  const ageNow = p.budgetBasis === "today" ? 0 : p.currentAge!;
+  const moveMonths = p.budgetBasis === "today" ? 0 : Math.round((p.moveAge! - ageNow) * 12);
   const moveAge = ageNow + moveMonths / 12;
   const months = p.horizonYears * 12;
   const growth = Math.pow(1 + p.returnRateAnnual, 1 / 12);
@@ -166,12 +175,15 @@ export function runProjection({ profile: p, scenario: s, usdRate }: EngineInput)
   let unfunded = 0;
   const canAccessRetirement = (age: number) =>
     p.retirementAccessConfirmed &&
-    p.retirementAccessAge !== null &&
-    age + 1e-9 >= p.retirementAccessAge;
+    (p.budgetBasis === "today" ||
+      (p.retirementAccessAge !== null && age + 1e-9 >= p.retirementAccessAge));
   const incomeAt = (age: number) =>
     p.monthlyIncomeNow! +
     (p.homeProperty === "rent" ? p.netRentMonthly : 0) +
-    (p.laterIncomeConfirmed && p.laterIncomeStartAge !== null && age + 1e-9 >= p.laterIncomeStartAge
+    (p.budgetBasis !== "today" &&
+    p.laterIncomeConfirmed &&
+    p.laterIncomeStartAge !== null &&
+    age + 1e-9 >= p.laterIncomeStartAge
       ? p.laterIncomeMonthly
       : 0);
   const push = (m: number, income: number, spending: number) =>

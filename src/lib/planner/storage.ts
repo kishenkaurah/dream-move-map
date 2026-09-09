@@ -14,6 +14,7 @@ export const MAX_SAVED_SCENARIOS = 3;
 const money = z.number().finite().min(0).max(1e10);
 const age = z.number().finite().min(18).max(120);
 export const profileSchema = z.object({
+  budgetBasis: z.enum(["today", "timeline"]).default("timeline"),
   homeCountry: z.enum(["AU", "OTHER"]),
   currency: z.enum(["AUD", "USD", "GBP", "EUR"]),
   usdRate: z.number().finite().min(0.0001).max(10000),
@@ -84,6 +85,7 @@ const planSchema = z
 
 export function defaultProfile(): HouseholdProfile {
   return {
+    budgetBasis: "today",
     homeCountry: "AU",
     currency: "AUD",
     usdRate: usdRateFor("AUD"),
@@ -91,7 +93,7 @@ export function defaultProfile(): HouseholdProfile {
     moveAge: null,
     household: "solo",
     accessibleFunds: null,
-    retirementFunds: null,
+    retirementFunds: 0,
     retirementAccessAge: null,
     retirementAccessConfirmed: false,
     monthlyIncomeNow: null,
@@ -177,4 +179,18 @@ export function importPlanJson(text: string): SavedPlan | null {
   } catch {
     return null;
   }
+}
+
+/** Present-value planner: old timing assumptions cannot silently affect spending. */
+export function currentBudgetProfile(p: HouseholdProfile): HouseholdProfile {
+  return {
+    ...p,
+    budgetBasis: "today",
+    currentAge: null,
+    moveAge: null,
+    retirementAccessConfirmed: p.budgetBasis === "today" && p.retirementAccessConfirmed,
+    retirementAccessAge: null,
+    laterIncomeConfirmed: false,
+    preMoveMonthlySaving: 0,
+  };
 }

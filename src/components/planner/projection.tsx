@@ -42,53 +42,25 @@ export function ProjectionView({
   return (
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-2">
-        <Metric label="Monthly spending at move" value={money(r.monthlySpendingAtMove)} />
-        <Metric
-          label={
-            r.monthlyGapAtMove > 0 ? "Needed from savings each month" : "Monthly surplus at move"
-          }
-          value={money(r.monthlyGapAtMove || r.monthlySurplusAtMove)}
-        />
-        <Metric label="Recurring income at move" value={money(r.monthlyIncomeAtMove)} />
-        <Metric
-          label="Monthly savings allowance at move"
-          value={money(r.monthlySavingsAllowanceAtMove)}
-        />
-        <Metric
-          label="Total monthly spending power before home expenses"
-          value={money(r.monthlySpendingPowerAtMove)}
-        />
-        <Metric label="One-off setup expenses" value={money(r.setupCost)} />
-        <Metric label="Deposits and visa funds required" value={money(r.restrictedAtMove)} />
-        <Metric
-          label="Accessible funds after setup"
-          value={r.setupShortfall > 0 ? "Move not funded" : money(r.accessibleAfterSetup)}
-        />
+        <Metric label="Monthly withdrawal needed" value={money(r.monthlyGapAtMove)} />
+        <Metric label="Savings at the end" value={money(r.finalAccessible + r.finalRetirement)} />
       </div>
-      <p className="text-sm text-muted-foreground">
-        At the move, accessible funds before setup are {money(r.accessibleAtMove)}, including any
-        net home sale. After setup and your emergency cash target,{" "}
-        {r.setupShortfall > 0
-          ? "the move is not yet funded"
-          : `${money(Math.max(0, r.accessibleAfterSetup - p.emergencyReserve))} remains above that target`}
-        . Confirmed, accessible retirement funds can also fund the move.
-      </p>
       <div className="rounded-xl border bg-secondary/50 p-5">
         <p className="text-sm font-semibold">
           {r.setupShortfall > 0
             ? `The move needs ${money(r.setupShortfall)} more upfront`
             : r.firstShortfallAge !== null
-              ? `First unfunded expense at age ${r.firstShortfallAge.toFixed(1)}`
+              ? `First unfunded expense in year ${r.firstShortfallAge.toFixed(1)}`
               : "No unfunded expenses within this projection"}
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
           {r.setupShortfall > 0
             ? "Projection stops before the move. Add funds or revise setup expenses and required deposits."
-            : "This is the result of your stated assumptions, not a guarantee of affordability. Market swings, tax changes and individual eligibility are not simulated."}
+            : "Based on your return and inflation settings; actual results will vary."}
         </p>
         {r.belowEmergencyReserveAge !== null && (
           <p className="mt-2 text-sm">
-            Cash falls below your emergency target at age {r.belowEmergencyReserveAge.toFixed(1)}.
+            Cash falls below your emergency target in year {r.belowEmergencyReserveAge.toFixed(1)}.
           </p>
         )}
         {r.totalUnfunded > 0 && !r.setupShortfall && (
@@ -100,11 +72,8 @@ export function ProjectionView({
       </div>
       <div>
         <h3 className="display text-xl">How your balances could change</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Nominal {p.currency}, before each year's cashflow. Deposits stay separate; the retirement
-          balance is not necessarily accessible. The table provides the same data.
-        </p>
-        <div className="mt-4 h-64 min-w-0" aria-label="Projected savings balances by age">
+        <p className="mt-1 text-sm text-muted-foreground">Years from today, in {p.currency}.</p>
+        <div className="mt-4 h-64 min-w-0" aria-label="Projected savings balances by year">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={r.series} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -117,7 +86,7 @@ export function ProjectionView({
                     : `${Math.round(v / 1000)}k`
                 }
               />
-              <Tooltip formatter={(v: number) => money(v)} labelFormatter={(v) => `Age ${v}`} />
+              <Tooltip formatter={(v: number) => money(v)} labelFormatter={(v) => `Year ${v}`} />
               <Legend />
               <Line
                 dataKey="accessible"
@@ -156,7 +125,7 @@ export function ProjectionView({
             </caption>
             <TableHeader>
               <TableRow>
-                <TableHead>Age</TableHead>
+                <TableHead>Year</TableHead>
                 <TableHead>Accessible</TableHead>
                 <TableHead>Retirement</TableHead>
                 <TableHead>Deposits</TableHead>
@@ -178,7 +147,7 @@ export function ProjectionView({
         </details>
       </div>
       {r.unknowns.length > 0 && (
-        <details open className="rounded-xl border p-4">
+        <details className="rounded-xl border p-4">
           <summary className="cursor-pointer text-sm font-semibold">
             Assumptions still to check
           </summary>

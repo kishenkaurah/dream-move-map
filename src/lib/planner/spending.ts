@@ -5,6 +5,7 @@ import { fxStressMultiplier } from "./fx";
 
 const incomeSchema = profileSchema.pick({
   monthlyIncomeNow: true,
+  budgetBasis: true,
   currentAge: true,
   moveAge: true,
   homeProperty: true,
@@ -20,6 +21,7 @@ const savingsSchema = profileSchema.pick({
   retirementFunds: true,
   retirementAccessAge: true,
   retirementAccessConfirmed: true,
+  budgetBasis: true,
   currentAge: true,
   moveAge: true,
   returnRateAnnual: true,
@@ -34,18 +36,17 @@ export function savingsAtMove(p: HouseholdProfile, s?: CityScenario | null) {
   if (
     !savingsSchema.safeParse(p).success ||
     p.accessibleFunds === null ||
-    p.currentAge === null ||
-    p.moveAge === null ||
-    p.moveAge < p.currentAge ||
+    (p.budgetBasis !== "today" &&
+      (p.currentAge === null || p.moveAge === null || p.moveAge < p.currentAge)) ||
     (s && !scenarioSchema.safeParse(s).success)
   )
     return null;
-  const months = Math.round((p.moveAge - p.currentAge) * 12);
-  const age = p.currentAge + months / 12;
+  const months = p.budgetBasis === "today" ? 0 : Math.round((p.moveAge! - p.currentAge!) * 12);
+  const age = (p.budgetBasis === "today" ? 0 : p.currentAge!) + months / 12;
   const unlocked =
     p.retirementAccessConfirmed &&
-    p.retirementAccessAge !== null &&
-    age + 1e-9 >= p.retirementAccessAge;
+    (p.budgetBasis === "today" ||
+      (p.retirementAccessAge !== null && age + 1e-9 >= p.retirementAccessAge));
   if (unlocked && p.retirementFunds === null) return null;
   const growth = Math.pow(1 + p.returnRateAnnual, 1 / 12);
   let accessible = p.accessibleFunds;
@@ -69,17 +70,19 @@ export function incomeAtMove(p: HouseholdProfile, s?: CityScenario | null) {
   if (
     !incomeSchema.safeParse(p).success ||
     p.monthlyIncomeNow === null ||
-    p.currentAge === null ||
-    p.moveAge === null ||
-    p.moveAge < p.currentAge
+    (p.budgetBasis !== "today" &&
+      (p.currentAge === null || p.moveAge === null || p.moveAge < p.currentAge))
   )
     return null;
-  const months = Math.round((p.moveAge - p.currentAge) * 12);
-  const age = p.currentAge + months / 12;
+  const months = p.budgetBasis === "today" ? 0 : Math.round((p.moveAge! - p.currentAge!) * 12);
+  const age = (p.budgetBasis === "today" ? 0 : p.currentAge!) + months / 12;
   const inflationFactor = Math.pow(Math.pow(1 + p.inflationAnnual, 1 / 12), months);
   const rent = p.homeProperty === "rent" ? p.netRentMonthly : 0;
   const later =
-    p.laterIncomeConfirmed && p.laterIncomeStartAge !== null && p.laterIncomeStartAge <= age + 1e-9
+    p.budgetBasis !== "today" &&
+    p.laterIncomeConfirmed &&
+    p.laterIncomeStartAge !== null &&
+    p.laterIncomeStartAge <= age + 1e-9
       ? p.laterIncomeMonthly
       : 0;
   const income = p.monthlyIncomeNow + rent + later;

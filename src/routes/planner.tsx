@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Download, Save, Upload } from "lucide-react";
+import { ArrowRight, Download, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { autoAllocateBudget } from "@/lib/planner/spending";
+import { LifestyleSummary } from "@/components/planner/lifestyle-summary";
 import { ProfileForm } from "@/components/planner/profile-form";
 import { BudgetForm } from "@/components/planner/budget-form";
 import { ProjectionView, Metric } from "@/components/planner/projection";
@@ -40,12 +41,12 @@ import { hasCompletedAssessment, loadAssessment } from "@/lib/assessment-storage
 import { track, trackOnce } from "@/lib/analytics";
 import { cityById, isDetailed, seedBudget } from "@/lib/planner/city-adapters";
 import { formatExact } from "@/lib/planner/fx";
-import { monthlyBudgetUsd, runProjection, validateProfile } from "@/lib/planner/engine";
+import { monthlyBudgetUsd, runProjection } from "@/lib/planner/engine";
 import { profileFromQuiz, quizShortlist } from "@/lib/planner/quiz-bridge";
 import {
   defaultProfile,
   exportPlanJson,
-  importPlanJson,
+  currentBudgetProfile,
   loadPlan,
   makePlan,
   newScenario,
@@ -93,7 +94,6 @@ function PlannerPage() {
     description: string;
     run: () => void;
   } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const assessment = loadAssessment();
     const matches = hasCompletedAssessment(assessment) ? quizShortlist(assessment.answers) : [];
@@ -101,12 +101,11 @@ function PlannerPage() {
     try {
       stored = loadPlan();
     } catch {
-      setError(
-        "Your saved plan could not be loaded. You can start again or import an exported copy.",
-      );
+      setError("Your saved plan could not be loaded. Please re-enter your figures.");
     }
-    const p =
-      stored?.profile ?? (matches.length ? profileFromQuiz(assessment.answers) : defaultProfile());
+    const p = currentBudgetProfile(
+      stored?.profile ?? (matches.length ? profileFromQuiz(assessment.answers) : defaultProfile()),
+    );
     setProfile(p);
     setShortlist(matches);
     setSaved(stored?.scenarios ?? []);
@@ -180,12 +179,6 @@ function PlannerPage() {
     setProfile(p);
     setDirty(true);
     setMessage("");
-    if (p.household !== profile.household)
-      setMessage(
-        "Household updated. Existing city allowances are unchanged; reset each budget if you want new household defaults.",
-      );
-    if (p.confirmedByUser && !profile.confirmedByUser && !validateProfile(p).length)
-      track("profile_completed");
   };
   const choose = (id: string) => {
     const next = cityById(id);
@@ -281,42 +274,6 @@ function PlannerPage() {
       setError("Correct invalid inputs before exporting. Unknown fields can remain blank.");
     }
   };
-  const importFile = async (file: File | undefined) => {
-    if (!file) return;
-    if (file.size > 200000) {
-      setError("That file is too large to be a planner export.");
-      return;
-    }
-    let imported: SavedPlan | null = null;
-    try {
-      imported = importPlanJson(await file.text());
-    } catch {
-      setError("Could not read the selected file.");
-      return;
-    }
-    if (!imported) {
-      setError(
-        "This is not a valid current-version planner export. Your existing plan is unchanged.",
-      );
-      return;
-    }
-    const plan = imported;
-    setConfirmation({
-      title: "Import this plan?",
-      description:
-        "This replaces your current financial profile and saved comparisons on this device.",
-      run: () => {
-        if (!commit(plan.profile, plan.scenarios, plan.draft)) return;
-        setProfile(plan.profile);
-        setSaved(plan.scenarios);
-        setScenario(plan.draft);
-        setCityId(plan.draft?.cityId ?? "");
-        setName(plan.draft ? `${cityById(plan.draft.cityId)?.name} — my plan` : "");
-        setBudgetDirty(false);
-        setTab("plan");
-      },
-    });
-  };
   if (!ready)
     return (
       <div>
@@ -340,8 +297,7 @@ function PlannerPage() {
               What would your retirement abroad cost?
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              One financial profile. Different places to call home. Compare the cost of living and
-              what it means for your savings.
+              See what your monthly budget could buy in a new city.
             </p>
           </div>
         </div>
@@ -375,38 +331,10 @@ function PlannerPage() {
             onChange={chooseCity}
           />
           <div className="flex items-center text-sm text-muted-foreground">
-            Detailed beta budgets: Thailand, Malaysia and Portugal. Other quiz matches stay visible
-            while detailed coverage is developed.
+            Detailed budgets for Thailand, Malaysia and Portugal.
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={() => commit(profile, saved, scenario)}>
-            <Save aria-hidden="true" />
-            Save plan on this device
-          </Button>
-          <Button variant="ghost" onClick={exportFile}>
-            <Download aria-hidden="true" />
-            Export
-          </Button>
-          <Button variant="ghost" onClick={() => inputRef.current?.click()}>
-            <Upload aria-hidden="true" />
-            Import
-          </Button>
-          <input
-            ref={inputRef}
-            className="hidden"
-            type="file"
-            accept="application/json,.json"
-            aria-label="Import planner file"
-            onChange={(e) => {
-              void importFile(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-          <span className="text-sm text-muted-foreground">
-            {dirty ? "Unsaved changes" : "Device-only storage · no account sync"}
-          </span>
-        </div>
+        {scenario && <LifestyleSummary profile={profile} scenario={scenario} />}
         {message && (
           <p role="status" className="rounded-lg bg-secondary p-3 text-sm">
             {message}
@@ -492,7 +420,12 @@ function PlannerPage() {
                         value={money(overseasToday ?? 0)}
                       />
                     )}
-                    <ProjectionView result={result} profile={profile} />
+                    <details className="rounded-xl border p-4">
+                      <summary className="cursor-pointer font-semibold">Savings projection</summary>
+                      <div className="mt-4">
+                        <ProjectionView result={result} profile={profile} />
+                      </div>
+                    </details>
                     <div className="space-y-3 rounded-xl border bg-card p-5">
                       <Label htmlFor="scenario-name">Name this scenario</Label>
                       <Input
@@ -588,8 +521,7 @@ function PlannerPage() {
             <h2 className="display text-2xl">Different destinations. The same finances.</h2>
             <p className="text-sm text-muted-foreground">
               All values are {profile.currency}, calculated from the financial profile you are
-              currently editing. Savings projections use the same return, inflation and move-age
-              assumptions.
+              currently editing. Savings projections use the same return and inflation assumptions.
             </p>
             {!saved.length ? (
               <div className="rounded-xl border border-dashed p-6">
@@ -621,11 +553,11 @@ function PlannerPage() {
                     {(
                       [
                         [
-                          "Monthly spending at move",
+                          "Monthly spending now",
                           (r: ReturnType<typeof runProjection>) => money(r.monthlySpendingAtMove),
                         ],
                         [
-                          "Recurring income at move",
+                          "Recurring income now",
                           (r: ReturnType<typeof runProjection>) => money(r.monthlyIncomeAtMove),
                         ],
                         [
@@ -657,7 +589,7 @@ function PlannerPage() {
                               ? "Move not funded"
                               : r.firstShortfallAge === null
                                 ? "None in projection"
-                                : `Age ${r.firstShortfallAge.toFixed(1)}`,
+                                : `Year ${r.firstShortfallAge.toFixed(1)}`,
                         ],
                         [
                           "Final accessible balance",
@@ -708,11 +640,21 @@ function PlannerPage() {
             )}
           </TabsContent>
         </Tabs>
+        <div className="flex flex-wrap items-center gap-2 border-t pt-5">
+          <Button onClick={() => commit(profile, saved, scenario)}>
+            <Save aria-hidden="true" /> Save plan
+          </Button>
+          <Button variant="outline" onClick={exportFile}>
+            <Download aria-hidden="true" /> Export
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {dirty ? "Unsaved changes" : "Saved on this device"}
+          </span>
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-5">
           <p className="max-w-3xl text-sm text-muted-foreground">
-            Educational estimates, not financial, tax, visa or insurance advice. Budgets and
-            exchange rates are indicative, not live. Plans stay in this browser unless you export
-            them. Financial amounts are not included in planner analytics.
+            Planning estimates, not quotes or financial advice. Check actual prices before making
+            plans.
           </p>
           <Button
             variant="ghost"

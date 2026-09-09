@@ -23,6 +23,7 @@ export type HomePropertyChoice = "none" | "keep" | "rent" | "sell";
 export type MaybeNumber = number | null;
 
 export interface HouseholdProfile {
+  budgetBasis: "today" | "timeline";
   homeCountry: HomeCountry;
   currency: CurrencyCode;
   /** Units of home currency per USD; editable indicative assumption. */

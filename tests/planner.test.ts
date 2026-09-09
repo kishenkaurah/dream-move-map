@@ -19,6 +19,7 @@ import type { HouseholdProfile, CityScenario } from "../src/lib/planner/types";
 
 const profile = (patch: Partial<HouseholdProfile> = {}): HouseholdProfile => ({
   ...defaultProfile(),
+  budgetBasis: "timeline",
   currency: "USD",
   usdRate: 1,
   currentAge: 60,
@@ -575,5 +576,69 @@ describe("automatic spending allocation", () => {
       autoAllocateBudget(loaded.profile, loaded.draft!).budget.annualReturnTravel,
     ).toBeGreaterThan(0);
     expect(loaded.profile.accessibleFunds).toBe(1800000);
+  });
+});
+
+import { currentBudgetProfile } from "../src/lib/planner/storage";
+describe("simplified current budget", () => {
+  test("no ages or approval checkbox needed, 1.8m gives 6000 monthly", () => {
+    const p = currentBudgetProfile(
+      profile({
+        accessibleFunds: 1800000,
+        withdrawalRateAnnual: 0.04,
+        currentAge: 38,
+        moveAge: 45,
+        returnRateAnnual: 0.07,
+        inflationAnnual: 0.03,
+        confirmedByUser: false,
+      }),
+    );
+    const s = autoAllocateBudget(p, scenario());
+    expect(p.currentAge).toBeNull();
+    expect(p.moveAge).toBeNull();
+    expect(incomeAtMove(p, s)!.savingsMonthly).toBe(6000);
+    expect(citySpending(p, s)!.total).toBeCloseTo(7000, 6);
+    const result = runProjection({ profile: p, scenario: s, usdRate: 1 });
+    expect(result.errors).toEqual([]);
+    expect(result.series[0].age).toBe(0);
+    expect(result.unknowns.some((x) => x.includes("confirm your financial"))).toBe(false);
+  });
+  test("legacy future savings, pensions and super are not silently available now", () => {
+    const p = currentBudgetProfile(
+      profile({
+        accessibleFunds: 100000,
+        withdrawalRateAnnual: 0.04,
+        retirementFunds: 300000,
+        retirementAccessConfirmed: true,
+        retirementAccessAge: 65,
+        laterIncomeMonthly: 2000,
+        laterIncomeConfirmed: true,
+        laterIncomeStartAge: 65,
+        preMoveMonthlySaving: 1000,
+      }),
+    );
+    expect(incomeAtMove(p)!.savings!.base).toBe(100000);
+    expect(incomeAtMove(p)!.income).toBe(1000);
+    expect(p.retirementAccessConfirmed).toBe(false);
+    expect(p.preMoveMonthlySaving).toBe(0);
+    const available = { ...p, retirementAccessConfirmed: true };
+    expect(incomeAtMove(available)!.savings!.base).toBe(400000);
+    expect(currentBudgetProfile(available).retirementAccessConfirmed).toBe(true);
+  });
+  test("current projection deducts withdrawals once without pre-move growth", () => {
+    const p = currentBudgetProfile(
+      profile({
+        accessibleFunds: 1800000,
+        withdrawalRateAnnual: 0.04,
+        horizonYears: 1,
+        currentAge: 38,
+        moveAge: 45,
+        returnRateAnnual: 0,
+      }),
+    );
+    const s = autoAllocateBudget(p, scenario());
+    const result = runProjection({ profile: p, scenario: s, usdRate: 1 });
+    expect(result.accessibleAtMove).toBe(1800000);
+    expect(result.finalAccessible).toBe(1728000);
   });
 });
