@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 import { AlertTriangle, Check, Minus, Stamp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -66,6 +68,11 @@ export function DestinationResultCard({
       </CardHeader>
 
       <CardContent className="space-y-5 pt-5">
+        <Button asChild variant="outline">
+          <Link to="/planner" search={{ city: d.id }}>
+            Plan life here
+          </Link>
+        </Button>
         {result.constraints.length > 0 && (
           <div
             role="alert"
@@ -117,8 +124,6 @@ export function DestinationResultCard({
             value={`${healthcareLabel(d.healthcare.rating)} (${d.healthcare.rating}/5)`}
           />
         </dl>
-
-
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
@@ -232,7 +237,6 @@ export function DestinationResultCard({
           </ul>
           <p className="mt-3 text-xs text-muted-foreground">{d.visa.note}</p>
         </div>
-
 
         <Badge variant="secondary" className="font-normal">
           Verify all visa, tax and healthcare details independently

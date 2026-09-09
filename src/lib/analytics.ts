@@ -10,6 +10,11 @@
 import { recordEvent } from "./analytics-session";
 
 export type AnalyticsEvent =
+  | "planner_started"
+  | "profile_completed"
+  | "scenario_saved"
+  | "comparison_viewed"
+  | "planner_interest"
   | "assessment_started"
   | "step_completed"
   | "assessment_completed"
@@ -88,11 +93,7 @@ function acquisition(): Acquisition {
 }
 
 /** Fires an event at most once per browser session for the given key. */
-export function trackOnce(
-  key: string,
-  event: AnalyticsEvent,
-  payload?: Record<string, unknown>,
-) {
+export function trackOnce(key: string, event: AnalyticsEvent, payload?: Record<string, unknown>) {
   if (typeof window === "undefined") return;
   try {
     const storeKey = `${ONCE_KEY_PREFIX}${key}`;
@@ -104,9 +105,7 @@ export function trackOnce(
   track(event, payload);
 }
 
-
-const measurementId =
-  import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"];
+const measurementId = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"];
 
 let gaInitialized = false;
 
@@ -168,7 +167,6 @@ export function trackPageView(path: string) {
   });
 }
 
-
 export function track(event: AnalyticsEvent, payload?: Record<string, unknown>) {
   if (typeof window === "undefined") {
     // eslint-disable-next-line no-console
@@ -203,9 +201,7 @@ export function track(event: AnalyticsEvent, payload?: Record<string, unknown>) 
     ...fullPayload,
     event_category: "engagement",
   });
-
 }
-
 
 export function getTrackedEvents(): TrackedEvent[] {
   if (typeof window === "undefined") return [];

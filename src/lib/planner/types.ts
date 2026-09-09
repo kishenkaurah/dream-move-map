@@ -13,7 +13,7 @@
  */
 import type { CurrencyCode } from "@/lib/currency";
 
-export const PLANNER_SCHEMA_VERSION = 1;
+export const PLANNER_SCHEMA_VERSION = 2;
 
 export type HomeCountry = "AU" | "OTHER";
 export type HouseholdType = "solo" | "couple" | "family";
@@ -23,8 +23,11 @@ export type HomePropertyChoice = "none" | "keep" | "rent" | "sell";
 export type MaybeNumber = number | null;
 
 export interface HouseholdProfile {
+  budgetBasis: "today" | "timeline";
   homeCountry: HomeCountry;
   currency: CurrencyCode;
+  /** Units of home currency per USD; editable indicative assumption. */
+  usdRate: number;
   currentAge: MaybeNumber;
   moveAge: MaybeNumber;
   household: HouseholdType;
@@ -65,6 +68,8 @@ export interface HouseholdProfile {
 
   /** Nominal annual return after fees and tax. May be negative. */
   returnRateAnnual: number;
+  /** Initial annual savings withdrawal allowance, separate from investment return. */
+  withdrawalRateAnnual: number;
   /** Annual inflation applied to living costs. */
   inflationAnnual: number;
 
@@ -90,6 +95,10 @@ export interface BudgetItems {
 export interface CityScenario {
   id: string;
   cityId: string;
+  /** Recalculate category allowances from spending power until manually edited. */
+  autoAllocate: boolean;
+  /** Null uses the household bedroom suggestion. */
+  rentalBedrooms: number | null;
   /** Monthly items in USD (annualReturnTravel is annual USD). */
   budget: BudgetItems;
   /** One-off relocation and setup spend (USD). Genuinely spent. */
@@ -111,4 +120,5 @@ export interface SavedPlan {
   profile: HouseholdProfile;
   scenarios: { name: string; scenario: CityScenario }[];
   savedAt: string;
+  draft: CityScenario | null;
 }

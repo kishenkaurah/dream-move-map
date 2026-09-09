@@ -9,12 +9,7 @@
 
 export interface ContentPage {
   /** Route path, also used verbatim in the sitemap and canonical tags */
-  path:
-    | "/retire/thailand"
-    | "/retire/thailand/2000-a-month"
-    | "/compare/chiang-mai-vs-hua-hin"
-    | "/compare/thailand-vs-malaysia"
-    | "/guides/retire-abroad-on-2000-a-month";
+  path: "/retire/thailand" | "/retire/thailand/2000-a-month";
   /** Short label used in navigation and related-reading cards */
   label: string;
   /** One-line description used in related-reading cards */
@@ -35,21 +30,6 @@ export const CONTENT_PAGES: ContentPage[] = [
     label: "Thailand on $2,000 a month",
     blurb:
       "What a $2,000 monthly budget realistically covers in Chiang Mai, Hua Hin, Bangkok and Phuket.",
-  },
-  {
-    path: "/compare/chiang-mai-vs-hua-hin",
-    label: "Chiang Mai vs Hua Hin",
-    blurb: "Mountains or beach: cost, air quality, healthcare access and who each town suits.",
-  },
-  {
-    path: "/compare/thailand-vs-malaysia",
-    label: "Thailand vs Malaysia",
-    blurb: "Cost, long-stay pathways, healthcare, language and infrastructure side by side.",
-  },
-  {
-    path: "/guides/retire-abroad-on-2000-a-month",
-    label: "Retire abroad on $2,000 a month",
-    blurb: "A shortlist of destinations where a $2,000 budget is genuinely workable — and where it isn't.",
   },
 ];
 

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssessmentRouteImport } from './routes/assessment'
 import { Route as ExpertsRouteImport } from './routes/experts'
+import { Route as PlannerRouteImport } from './routes/planner'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ThailandCallRouteImport } from './routes/thailand-call'
@@ -42,6 +43,11 @@ const AssessmentRoute = AssessmentRouteImport.update({
 const ExpertsRoute = ExpertsRouteImport.update({
   id: '/experts',
   path: '/experts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlannerRoute = PlannerRouteImport.update({
+  id: '/planner',
+  path: '/planner',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResultsRoute = ResultsRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assessment': typeof AssessmentRoute
   '/experts': typeof ExpertsRouteWithChildren
+  '/planner': typeof PlannerRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/thailand-call': typeof ThailandCallRouteWithChildren
@@ -152,6 +159,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assessment': typeof AssessmentRoute
+  '/planner': typeof PlannerRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/experts/$country': typeof ExpertsCountryRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/assessment': typeof AssessmentRoute
   '/experts': typeof ExpertsRouteWithChildren
+  '/planner': typeof PlannerRoute
   '/results': typeof ResultsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/thailand-call': typeof ThailandCallRouteWithChildren
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/'
     | '/assessment'
     | '/experts'
+    | '/planner'
     | '/results'
     | '/sitemap.xml'
     | '/thailand-call'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/assessment'
+    | '/planner'
     | '/results'
     | '/sitemap.xml'
     | '/experts/$country'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/'
     | '/assessment'
     | '/experts'
+    | '/planner'
     | '/results'
     | '/sitemap.xml'
     | '/thailand-call'
@@ -258,6 +270,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssessmentRoute: typeof AssessmentRoute
   ExpertsRoute: typeof ExpertsRouteWithChildren
+  PlannerRoute: typeof PlannerRoute
   ResultsRoute: typeof ResultsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ThailandCallRoute: typeof ThailandCallRouteWithChildren
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/experts'
       fullPath: '/experts'
       preLoaderRoute: typeof ExpertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planner': {
+      id: '/planner'
+      path: '/planner'
+      fullPath: '/planner'
+      preLoaderRoute: typeof PlannerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/results': {
@@ -454,6 +474,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssessmentRoute: AssessmentRoute,
   ExpertsRoute: ExpertsRouteWithChildren,
+  PlannerRoute: PlannerRoute,
   ResultsRoute: ResultsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ThailandCallRoute: ThailandCallRouteWithChildren,

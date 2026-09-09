@@ -18,7 +18,16 @@ export function SiteHeader({ action }: { action?: React.ReactNode }) {
             </span>
           </span>
         </Link>
-        {action}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Link
+            to="/planner"
+            search={{ city: "" }}
+            className="focus-ring rounded-md px-2 py-2 text-sm font-medium text-primary"
+          >
+            Planner
+          </Link>
+          {action}
+        </div>
       </div>
     </header>
   );
